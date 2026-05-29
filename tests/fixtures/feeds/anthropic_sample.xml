@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/">
+<channel>
+  <title>Anthropic Blog</title>
+  <link>https://www.anthropic.com/news</link>
+  <description>The latest news from Anthropic</description>
+  <language>en</language>
+  <item>
+    <title>Model Context Protocol</title>
+    <link>https://www.anthropic.com/news/model-context-protocol</link>
+    <description>Introducing MCP, an open standard for connecting AI models to data sources.</description>
+    <pubDate>Mon, 25 Nov 2024 12:00:00 GMT</pubDate>
+    <dc:creator>Anthropic</dc:creator>
+  </item>
+</channel>
+</rss>

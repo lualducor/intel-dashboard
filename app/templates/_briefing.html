@@ -1,0 +1,18 @@
+<section id="briefing" class="daily-briefing" aria-labelledby="daily-briefing-title">
+  <div class="section-heading">
+    <h1 id="daily-briefing-title">Daily Briefing</h1>
+    <button
+      type="button"
+      hx-post="/briefing/regenerate"
+      hx-target="#briefing"
+      hx-swap="outerHTML"
+    >
+      Regenerate
+    </button>
+  </div>
+  {% if briefing %}
+  <div class="briefing-body"><pre>{{ briefing.body_markdown }}</pre></div>
+  {% else %}
+  <p class="empty-state">No briefing yet — click Regenerate.</p>
+  {% endif %}
+</section>

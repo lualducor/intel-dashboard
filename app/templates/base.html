@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}INTEL{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/vendor/htmx.min.js"></script>
+  <script src="/static/shortcuts.js" defer></script>
+</head>
+<body>
+  <header class="top-bar">
+    <a class="brand" href="/">INTEL</a>
+    <button
+      type="button"
+      class="refresh-all"
+      hx-post="/ingest/run"
+      hx-swap="none"
+      hx-on::after-request="window.location.reload()"
+    >
+      ↻ Refresh All
+    </button>
+  </header>
+
+  {% block content %}{% endblock %}
+
+  {% include "_help_overlay.html" %}
+</body>
+</html>

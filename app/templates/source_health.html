@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Source Health — INTEL{% endblock %}
+
+{% block content %}
+<main class="triage-inbox">
+  <h1>Source Health</h1>
+  <table class="source-health-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Status</th>
+        <th>Last success</th>
+        <th>Last error</th>
+        <th>Failures</th>
+        <th>Avg items</th>
+        <th>Error msg</th>
+        <th>Test</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for row in rows %}
+        {% set source = row.source %}
+        <tr>
+          <td>{{ source.name }}</td>
+          <td class="status-{{ row.status }}">{{ row.status }}</td>
+          <td>{{ source.last_success_at|to_bogota_local }}</td>
+          <td>{{ source.last_error_at|to_bogota_local }}</td>
+          <td>{{ source.consecutive_failures }}</td>
+          <td>{{ '%.1f'|format(source.avg_items_per_fetch) }}</td>
+          <td>{{ row.last_error_message }}</td>
+          <td>
+            <button
+              type="button"
+              class="btn"
+              hx-post="/ingest/test/{{ source.slug }}"
+              hx-swap="none"
+            >
+              Test
+            </button>
+          </td>
+        </tr>
+      {% else %}
+        <tr>
+          <td colspan="8">No sources found.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</main>
+{% endblock %}

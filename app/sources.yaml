@@ -1,0 +1,161 @@
+# Curated seed set. Every entry should be verified by scripts/verify_feeds.py
+# before Phase 1 closes. `[verify]` entries are starting points that may need
+# replacement. Any feed returning non-200 / empty body is set active: false
+# with a dated comment, then re-seeded.
+
+# === AI / Tech ===
+- slug: anthropic-news
+  name: Anthropic News
+  url: https://www.anthropic.com/news
+  feed_url: https://www.anthropic.com/news/rss.xml   # [verify] 2026-05-28: 404, no public RSS found
+  active: false  # 2026-05-28 verify_feeds: 404; needs a working feed URL
+  kind: rss
+  source_type: official_blog
+  topic: ai
+  trust_score: 0.95
+  source_priority: 0.9
+  default_language: en
+  default_country_scope: global
+
+- slug: openai-blog
+  name: OpenAI Blog
+  url: https://openai.com/blog
+  feed_url: https://openai.com/blog/rss.xml          # [verify]
+  kind: rss
+  source_type: official_blog
+  topic: ai
+  trust_score: 0.85
+  source_priority: 0.8
+  default_language: en
+
+- slug: google-deepmind
+  name: Google DeepMind Blog
+  url: https://deepmind.google/discover/blog/
+  feed_url: https://deepmind.google/blog/rss.xml     # [verify]
+  kind: rss
+  source_type: official_blog
+  topic: ai
+  trust_score: 0.9
+  source_priority: 0.8
+  default_language: en
+
+- slug: huggingface-blog
+  name: Hugging Face Blog
+  url: https://huggingface.co/blog
+  feed_url: https://huggingface.co/blog/feed.xml     # [verify]
+  kind: rss
+  source_type: tech_media
+  topic: ai
+  trust_score: 0.85
+  source_priority: 0.8
+  default_language: en
+
+- slug: simonwillison
+  name: Simon Willison's Weblog
+  url: https://simonwillison.net/
+  feed_url: https://simonwillison.net/atom/everything/
+  kind: rss
+  source_type: newsletter
+  topic: ai
+  trust_score: 0.9
+  source_priority: 0.9
+  default_language: en
+
+- slug: latent-space
+  name: Latent Space
+  url: https://www.latent.space/
+  feed_url: https://www.latent.space/feed
+  kind: rss
+  source_type: newsletter
+  topic: ai
+  trust_score: 0.8
+  source_priority: 0.75
+  default_language: en
+
+- slug: ai-snake-oil
+  name: AI Snake Oil
+  url: https://www.aisnakeoil.com/
+  feed_url: https://www.aisnakeoil.com/feed
+  kind: rss
+  source_type: newsletter
+  topic: ai
+  trust_score: 0.85
+  source_priority: 0.7
+  default_language: en
+
+- slug: arxiv-cs-ai
+  name: arXiv cs.AI
+  url: https://arxiv.org/list/cs.AI/recent
+  feed_url: https://export.arxiv.org/rss/cs.AI
+  kind: rss
+  source_type: research
+  topic: ai
+  trust_score: 0.75
+  source_priority: 0.6
+  default_language: en
+
+# === Colombia / Bogotá ===
+- slug: eltiempo-bogota
+  name: El Tiempo — Bogotá
+  url: https://www.eltiempo.com/bogota
+  feed_url: https://www.eltiempo.com/rss/bogota.xml  # [verify]
+  kind: rss
+  source_type: local_news
+  topic: colombia
+  trust_score: 0.7
+  source_priority: 0.7
+  paywalled: true
+  default_language: es
+  default_country_scope: co
+
+- slug: semana-tecnologia
+  name: Semana — Tecnología
+  url: https://www.semana.com/tecnologia/
+  feed_url: https://www.semana.com/rss/tecnologia.xml  # [verify] 2026-05-28: 404
+  active: false  # 2026-05-28 verify_feeds: 404; needs a working feed URL
+  kind: rss
+  source_type: tech_media
+  topic: colombia
+  trust_score: 0.6
+  source_priority: 0.55
+  default_language: es
+  default_country_scope: co
+
+- slug: la-silla-vacia
+  name: La Silla Vacía
+  url: https://www.lasillavacia.com/
+  feed_url: https://www.lasillavacia.com/feed/        # [verify]
+  kind: rss
+  source_type: local_news
+  topic: colombia
+  trust_score: 0.8
+  source_priority: 0.7
+  default_language: es
+  default_country_scope: co
+
+- slug: mintic
+  name: MinTIC Noticias
+  url: https://www.mintic.gov.co/portal/inicio/Sala-de-prensa/Noticias/
+  feed_url: https://www.mintic.gov.co/portal/inicio/Sala-de-prensa/Noticias/rss.xml  # [verify] 2026-05-28: 404
+  active: false  # 2026-05-28 verify_feeds: 404; needs a working feed URL
+  kind: rss
+  source_type: government
+  topic: colombia
+  trust_score: 0.75
+  source_priority: 0.6
+  default_language: es
+  default_country_scope: co
+
+# === Horoscope (Cancer) ===
+- slug: horoscope-cancer
+  name: Horóscopo Cáncer
+  url: https://www.horoscope.com/us/horoscopes/general/horoscope-general-daily-today.aspx?sign=4
+  feed_url: https://www.horoscope.com/us/horoscopes/general/horoscope-rss.aspx?sign=4  # [verify] 2026-05-28: empty feed
+  active: false  # 2026-05-28 verify_feeds: empty feed; needs a working horoscope RSS
+  kind: rss
+  source_type: horoscope
+  topic: horoscope
+  trust_score: 0.3
+  source_priority: 0.2
+  default_language: en
+  fetch_interval_minutes: 720

@@ -1,0 +1,68 @@
+# Keyword buckets. Each match contributes its weight to keyword_score.
+keywords:
+  ai-systems:
+    weight: 1.0
+    terms: [ai system, ai pipeline, ai infrastructure, ai workflow]
+  llm-orchestration:
+    weight: 1.0
+    terms: [llm, large language model, orchestration, tool-use, function calling, mcp]
+  agentic-ai:
+    weight: 1.2
+    terms: [agent, agentic, autonomous, multi-agent, ai agent]
+  cybersecurity-ai:
+    weight: 1.1
+    terms: [prompt injection, jailbreak, ai safety, red-team, phishing, exploit]
+  local-first:
+    weight: 0.9
+    terms: [local-first, ollama, llama.cpp, on-device, edge ai, sqlite]
+  developer-tooling:
+    weight: 0.8
+    terms: [sdk, cli, api, ide, devtool, copilot, dev experience]
+  open-source-model:
+    weight: 0.9
+    terms: [open weights, open-source model, gguf, hugging face]
+  ai-research:
+    weight: 0.7
+    terms: [arxiv, paper, preprint, benchmark, evaluation]
+  ai-infrastructure:
+    weight: 0.8
+    terms: [gpu, inference, vllm, serving, kv cache, quantization]
+  product-launch:
+    weight: 0.6
+    terms: [launch, releases, announces, ships, available now]
+  regulation:
+    weight: 0.4
+    terms: [regulation, law, eu ai act, white house, executive order]
+  colombia-tech:
+    weight: 0.9
+    terms: [colombia, bogotá, bogota, medellín, medellin, mintic]
+
+# Category priority. Final value contributes via the 0.10 category weight in final_score.
+categories_priority:
+  agentic_ai: 0.95
+  ai_infrastructure: 0.85
+  open_source_model: 0.85
+  ai_safety: 0.80
+  cybersecurity_ai: 0.85
+  research_paper: 0.70
+  developer_tooling: 0.75
+  product_launch: 0.60
+  regulation: 0.40
+  general: 0.30
+  horoscope: 0.30
+
+# Maps a matched keyword bucket -> the category bucket used for category_score.
+# Buckets not listed here fall through to "general".
+bucket_to_category:
+  ai-systems: ai_infrastructure
+  llm-orchestration: agentic_ai
+  agentic-ai: agentic_ai
+  cybersecurity-ai: cybersecurity_ai
+  local-first: ai_infrastructure
+  developer-tooling: developer_tooling
+  open-source-model: open_source_model
+  ai-research: research_paper
+  ai-infrastructure: ai_infrastructure
+  product-launch: product_launch
+  regulation: regulation
+  colombia-tech: general

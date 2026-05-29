@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Sources — INTEL{% endblock %}
+
+{% block content %}
+  <main class="page">
+    <h1>Sources</h1>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Topic</th>
+          <th>Active</th>
+          <th>Trust</th>
+          <th>Priority</th>
+        </tr>
+      </thead>
+      <tbody id="sources-body">
+        {% for source in sources %}
+          {% include "_source_row.html" %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </main>
+{% endblock %}

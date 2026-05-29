@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Score Debug — INTEL{% endblock %}
+
+{% block content %}
+<main class="container score-debug">
+  <h1>Score Debug</h1>
+
+  <section class="article-summary">
+    <h2>
+      <a href="{{ article.original_url }}" target="_blank">{{ article.title }}</a>
+    </h2>
+    <p>
+      <strong>Final Score:</strong> {{ article.final_score | round(4) }}<br>
+      <strong>Score Version:</strong> {{ article.score_version }}<br>
+      <strong>Explanation:</strong> {{ article.score_explanation }}
+    </p>
+  </section>
+
+  <section class="breakdown">
+    <h3>Factor Breakdown</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Factor</th>
+          <th>Score</th>
+          <th>Weight</th>
+          <th>Contribution</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% set factors = [
+          ('source', article.source_score),
+          ('freshness', article.freshness_score),
+          ('keyword', article.keyword_score),
+          ('category', article.category_score),
+          ('feedback', article.user_feedback_score),
+          ('novelty', article.novelty_score)
+        ] %}
+        {% for name, score in factors %}
+        <tr>
+          <td>{{ name | capitalize }}</td>
+          <td>{{ score | round(4) }}</td>
+          <td>{{ weights[name] }}</td>
+          <td>{{ (score * weights[name]) | round(4) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="history">
+    <h3>Score History</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Final Score</th>
+          <th>Explanation</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for run in runs %}
+        <tr>
+          <td>{{ run.created_at | to_bogota_local }}</td>
+          <td>{{ run.final_score | round(4) }}</td>
+          <td>{{ run.explanation }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  {% if diffs %}
+  <section class="diffs">
+    <h3>Consecutive Run Diffs (Final Score)</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>From Run ID</th>
+          <th>To Run ID</th>
+          <th>Change</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for diff in diffs %}
+        <tr>
+          <td>{{ diff.from_id }}</td>
+          <td>{{ diff.to_id }}</td>
+          <td>{{ diff.final[0] }} → {{ diff.final[1] }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+
+  <section class="actions">
+    <form method="post" action="/debug/scoring/{{ article.id }}/recalc">
+      <button type="submit">Recalculate</button>
+    </form>
+  </section>
+</main>
+{% endblock %}

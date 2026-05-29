@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}Search — INTEL{% endblock %}
+
+{% block content %}
+<main class="search-container">
+  <form method="GET" action="/search" class="search-form">
+    <input type="search" name="q" id="search-box" value="{{ q }}" placeholder="Search articles and notes..." autofocus>
+    <button type="submit">Search</button>
+  </form>
+
+  <div class="search-results">
+    {% if q.strip() %}
+      {% if results %}
+        <p class="results-count">{{ results|length }} results</p>
+        <div class="card-list">
+          {% for a in results %}
+            {% include "_article_card.html" %}
+          {% endfor %}
+        </div>
+      {% else %}
+        <p class="empty-state">No matches for '{{ q }}'.</p>
+      {% endif %}
+    {% else %}
+      <p class="hint">Type a query to search.</p>
+    {% endif %}
+  </div>
+</main>
+{% endblock %}

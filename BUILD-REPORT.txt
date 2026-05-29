@@ -1,0 +1,168 @@
+==============================================================================
+INTEL NEWS DASHBOARD — BUILD REPORT (MVP, Phases 0-7)
+==============================================================================
+Project : WORKSPACE/proyects/NEWSDASHBOARD/  (own git repo, codename INTEL)
+Owner   : Luis Alberto Duarte Cortes
+Built   : 2026-05-28 / 2026-05-29
+Spec    : ../../dashboard/news/PLAN.md  (canonical, 1092 lines)
+Status  : MVP COMPLETE. 79 tests passing. All PLAN.md §9 acceptance criteria met.
+Note    : NOT committed — staged for manual review per workflow.
+
+------------------------------------------------------------------------------
+1. WHAT IT IS
+------------------------------------------------------------------------------
+A single-user, local-first AI + Colombia/Bogota news triage dashboard.
+Core loop: Fetch -> Normalize -> Dedupe -> Score -> Explain -> Triage ->
+Save/Ignore -> improves future ranking.
+
+Stack (locked, no deviations):
+  Python 3.12, FastAPI, Uvicorn
+  SQLAlchemy 2.x + Alembic, SQLite (WAL, FK on, busy_timeout, synchronous=NORMAL)
+  FTS5 full-text search (virtual table + 3 sync triggers)
+  Jinja2 server-rendered HTML + HTMX 2.x (vendored, no CDN) — NO React
+  httpx + feedparser (RSS), trafilatura + BeautifulSoup (clipper)
+  pydantic-settings, pyyaml, filelock, pytest + respx
+  Cron-driven ingest (system crontab), no in-process scheduler
+
+------------------------------------------------------------------------------
+2. PHASES DELIVERED
+------------------------------------------------------------------------------
+Phase 0  Foundation     — pyproject, config (INTEL_ env prefix), db engine +
+                          PRAGMA bundle, full 14-table schema, Alembic initial
+                          migration incl. articles_fts FTS5 + 3 triggers +
+                          (topic, final_score DESC) index, FastAPI skeleton,
+                          /healthz, rotating-file logging.
+Phase 1  Ingest Core    — normalizer (canonicalize/dedup_hash/normalized_title/
+                          content_hash), derive (country_scope/language/urgency/
+                          reading_time), rss adapter, paywall link-rewrite,
+                          keyword tagger, deterministic v1 scorer, feedback
+                          affinity maps (cold-start floor), ingest orchestrator
+                          (filelock + backoff + short txns), sources.yaml +
+                          interests.yaml, seed_sources, verify_feeds.
+Phase 2  Triage UI      — dashboard route, 4 derived queues (Must Read / Maybe
+                          Useful / For Content / Noise), HTMX filter feed,
+                          ingest routes (run / run/{slug} / test/{slug}),
+                          article card, dark CSS, keyboard shortcuts, help overlay.
+Phase 3  Actions        — save/archive/useful/not_relevant/important/read/
+                          followup/used_for_content -> status + UserAction;
+                          notes; article_uses CRUD + /content page.
+Phase 4  Saved/Search   — saved page (filter dropdown: for_content/for_project/
+                          for_job/for_reading/with_notes/by_topic/by_source),
+                          archive page, FTS5 search (titles+summaries UNION
+                          notes.body, ordered by final_score), rebuild_fts.
+Phase 5  Briefing/Clip  — daily briefing (top-5 Must Read last 36h -> briefings
+                          row), manual clipper (URL -> trafilatura extract ->
+                          same scoring pipeline -> manual-clip source, dedupe).
+Phase 6  Operations     — cron_ingest (shared lock), source-health page (status
+                          derivation: healthy/degraded/broken/inactive/
+                          needs_review/stale), backup_db (SQLite online backup),
+                          prune (retention), recalculate_scores, export_config.
+Phase 7  Export/Admin   — exporter (md/csv/json, for-content joins article_uses),
+                          /export.{fmt}, sources admin (toggle active + inline
+                          edit trust/priority), score-debug page (breakdown +
+                          weights + score_runs history + diffs + recalc button).
+Phase 8  (Local AI)     — OUT OF SCOPE by design. Tables exist (ai_annotations,
+                          article_embeddings, story_clusters), workers do not.
+
+------------------------------------------------------------------------------
+3. SCORING (v1_base, deterministic — PLAN.md §6.1)
+------------------------------------------------------------------------------
+final_score =
+    0.20 * source_score        (0.7*trust + 0.3*priority)
+  + 0.20 * freshness_score      (exp(-hours_since_published / 36); None -> 0.5)
+  + 0.20 * keyword_score        (saturating: 1 - exp(-sum_matched_weights/1.5))
+  + 0.10 * category_score       (categories_priority[category])
+  + 0.20 * user_feedback_score  (affinity maps; cold-start floor 0.3 until 50 actions)
+  + 0.10 * novelty_score        (1 - max bigram-Jaccard vs recent-24h titles)
+Every score carries an explanation and a score_runs audit row.
+
+------------------------------------------------------------------------------
+4. FILE INVENTORY
+------------------------------------------------------------------------------
+47 Python modules | 14 routers | 16 services | 8 scripts | 16 templates
+30 test files | 79 tests passing
+
+app/
+  config.py db.py models.py main.py templating.py
+  interests.yaml sources.yaml
+  services/  normalizer derive rss paywall tagger scorer feedback ingest lock
+             queues search clipper extractor briefing source_health exporter
+  routers/   dashboard ingest feed content saved search briefing clip
+             source_health sources_admin export score_debug notes actions
+  templates/ base index _article_card _card_list _queue_tabs _help_overlay
+             _briefing saved archive search clip content source_health sources
+             _source_row score_debug
+  static/    style.css shortcuts.js vendor/htmx.min.js
+scripts/  seed_sources verify_feeds cron_ingest backup_db export_config
+          prune recalculate_scores rebuild_fts
+alembic/  env.py script.py.mako versions/fdc4204ffb06_initial_schema.py
+tests/    conftest.py + 30 test_*.py
+
+------------------------------------------------------------------------------
+5. HOW TO RUN
+------------------------------------------------------------------------------
+  cd WORKSPACE/proyects/NEWSDASHBOARD
+  python -m venv .venv && source .venv/bin/activate
+  pip install -e ".[dev]"
+  cp .env.example .env
+  alembic upgrade head
+  python -m scripts.seed_sources
+  uvicorn app.main:app --reload          # http://localhost:8000  (docs at /docs)
+  curl -X POST http://localhost:8000/ingest/run   # batch fetch + score
+
+  pytest -q                              # 79 passing
+  python -m scripts.verify_feeds         # check feed health
+  python -m scripts.backup_db
+  python -m scripts.recalculate_scores --all --dry-run
+
+------------------------------------------------------------------------------
+6. VERIFICATION RESULTS (PLAN.md §9)
+------------------------------------------------------------------------------
+[x] Fresh-DB boot (alembic + seed + uvicorn) ~1s; / renders 4 empty-state tabs.
+[x] pytest -q : 79 passed.
+[x] Live ingest: 9 feeds -> 160 articles scored; 2nd pass = 0 new (dedupe).
+[x] FTS5 sync verified (insert propagates; MATCH returns hits; rebuild recovers).
+[x] Actions: useful->saved+UserAction; used_for_content->article_uses row.
+[x] Clip: real URL extracted + scored (manual-clip source); dedupes known URLs.
+[x] Briefing: top-5 markdown generated; briefings row written.
+[x] Concurrency lock: second ingest returns {locked:true} (test_ingest_lock).
+[x] Backup: row counts match live DB (161 = 161).
+[x] recalc --dry-run prints diffs, writes nothing.
+[x] Source-health page renders derived statuses; export md/csv/json OK;
+    score-debug recalc appends a score_runs row.
+
+------------------------------------------------------------------------------
+7. OPEN ITEMS (need owner decision/action)
+------------------------------------------------------------------------------
+- 4 feeds returned 404/empty during verify_feeds (2026-05-28) and are marked
+  active:false in app/sources.yaml with dated comments — supply working RSS URLs:
+    anthropic-news (no public RSS found), semana-tecnologia, mintic, horoscope-cancer.
+- Spanish keyword coverage is thin (only colombia-tech bucket) — Colombian
+  sources under-score on AI topics (PLAN.md limitation L2). Add ES synonyms to
+  interests.yaml after first real use.
+- Briefing is on-demand only (MVP default); auto-cron regeneration deferred.
+- arXiv can flood (hundreds/pass). INTEL_MAX_ITEMS_PER_PASS lever exists
+  (default 0 = unlimited); set >0 if it dominates.
+- Harmless pytest warnings: Starlette testclient httpx note, Alembic
+  path_separator deprecation. No action required.
+
+------------------------------------------------------------------------------
+8. BUILD APPROACH
+------------------------------------------------------------------------------
+Claude orchestrated; Codex + Gemini wrote leaf modules + tests in parallel
+headless mode each phase. Claude authored all contract/integration files
+(config, db, models, scorer, feedback, ingest, queues, search, clipper,
+recalculate_scores) and wired every router.
+
+Cross-agent integration bugs caught and fixed during integration:
+  - filelock thread_local leak (acquire in worker thread via asyncio.to_thread,
+    release in event-loop thread -> must pass thread_local=False).
+  - route-order collision (/articles/{id}/notes caught by /{action} catch-all).
+  - legacy Jinja2 TemplateResponse signature (must pass request first).
+  - CSS class mismatch (.main-layout vs .dashboard-grid) stacking the columns.
+  - missing alembic/script.py.mako template.
+  - naive/aware datetime arithmetic on DB-sourced datetimes in recalc.
+
+==============================================================================
+END OF REPORT
+==============================================================================

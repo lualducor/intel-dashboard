@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}Archive — INTEL{% endblock %}
+
+{% block content %}
+<main>
+  <h1>Archive</h1>
+
+  {% if not articles %}
+  <p class="empty-state">No archived articles yet.</p>
+  {% else %}
+  <div class="card-list">
+    {% for a in articles %}
+    {% include "_article_card.html" %}
+    {% endfor %}
+  </div>
+  {% endif %}
+</main>
+{% endblock %}

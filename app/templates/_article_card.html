@@ -1,0 +1,90 @@
+<article class="article-card" data-article-id="{{ a.id }}" tabindex="-1">
+  <div class="article-card-header">
+    <span class="score-badge">{{ a.final_score|round(2) }}</span>
+    <h3>
+      <a
+        href="{% if a.paywalled %}{{ settings.paywall_proxy_prefix ~ a.original_url }}{% else %}{{ a.original_url }}{% endif %}"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        {{ a.title }}
+      </a>
+      {% if a.paywalled %}<span class="paywall-marker" aria-label="Paywalled">🔒</span>{% endif %}
+    </h3>
+  </div>
+
+  {% set published = a.published_at|to_bogota_local %}
+  <p class="article-meta">
+    <span>{{ a.source.name if a.source else "Unknown" }}</span>
+    <span>{{ a.category or "uncategorized" }}</span>
+    <span>{{ a.urgency }}</span>
+    <span>{{ a.reading_time_minutes }} min</span>
+    <span>{{ published.strftime("%Y-%m-%d %H:%M") if published else "No date" }}</span>
+  </p>
+
+  {% if a.tags %}
+  <div class="tag-list" aria-label="Tags">
+    {% for tag in a.tags %}
+    <span class="tag-chip">{{ tag.name }}</span>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if a.score_explanation %}
+  <p class="score-explanation"><small>{{ a.score_explanation }}</small></p>
+  {% endif %}
+
+  {% if a.summary %}
+  <p class="article-summary">{{ a.summary|truncate(320) }}</p>
+  {% endif %}
+
+  <div class="article-actions">
+    <button type="button" hx-post="/articles/{{ a.id }}/save" hx-target="closest .article-card" hx-swap="outerHTML">Save</button>
+    <button type="button" hx-post="/articles/{{ a.id }}/archive" hx-target="closest .article-card" hx-swap="outerHTML">Archive</button>
+    <button type="button" hx-post="/articles/{{ a.id }}/useful" hx-target="closest .article-card" hx-swap="outerHTML">Useful</button>
+    <button type="button" hx-post="/articles/{{ a.id }}/not_relevant" hx-target="closest .article-card" hx-swap="outerHTML">Not relevant</button>
+    <button type="button" hx-post="/articles/{{ a.id }}/for_content" hx-target="closest .article-card" hx-swap="outerHTML">For content</button>
+  </div>
+
+  <details>
+    <summary>For content</summary>
+    <form class="for-content-form" hx-post="/articles/{{ a.id }}/used_for_content" hx-target="closest .article-card" hx-swap="outerHTML">
+      <label>
+        Use type
+        <select name="use_type">
+          <option value="twitch">Twitch</option>
+          <option value="linkedin">LinkedIn</option>
+          <option value="blog">Blog</option>
+          <option value="newsletter">Newsletter</option>
+          <option value="project_research">Project research</option>
+          <option value="job_market">Job market</option>
+          <option value="personal_reading">Personal reading</option>
+        </select>
+      </label>
+      <label>
+        Content angle
+        <input type="text" name="content_angle">
+      </label>
+      <label>
+        Possible hook
+        <input type="text" name="possible_hook">
+      </label>
+      <label>
+        Related project
+        <input type="text" name="related_project">
+      </label>
+      <button type="submit">Save content use</button>
+    </form>
+  </details>
+
+  <details>
+    <summary>Notes</summary>
+    <form hx-post="/articles/{{ a.id }}/notes" hx-target="closest .article-card" hx-swap="outerHTML">
+      <label>
+        Note
+        <textarea name="body"></textarea>
+      </label>
+      <button type="submit">Add note</button>
+    </form>
+  </details>
+</article>

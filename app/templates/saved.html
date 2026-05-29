@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Saved — INTEL{% endblock %}
+
+{% block content %}
+<main>
+  <h1>Saved</h1>
+
+  <nav class="filter-bar" aria-label="Saved filters">
+    {% for f in filters %}
+    <a
+      href="/saved?filter={{ f }}"
+      class="{% if f == active_filter %}active{% endif %}"
+    >{{ f|replace("_", " ")|title }}</a>
+    {% endfor %}
+  </nav>
+
+  {% if not articles %}
+  <p class="empty-state">No saved articles yet.</p>
+  {% else %}
+  <div class="card-list">
+    {% for a in articles %}
+    {% include "_article_card.html" %}
+    {% endfor %}
+  </div>
+  {% endif %}
+</main>
+{% endblock %}

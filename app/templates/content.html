@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}For Content - INTEL{% endblock %}
+
+{% block content %}
+<main class="content-dashboard">
+  <h1>For Content</h1>
+
+  {% if not groups %}
+    <div class="empty-state">
+      <p>No saved-for-content items yet.</p>
+    </div>
+  {% else %}
+    {% for use_type, items in groups.items() %}
+      <section class="use-group" data-use-type="{{ use_type }}">
+        <h2>{{ use_type | capitalize }}</h2>
+        <div class="card-list">
+          {% for item in items %}
+            <article class="article-card">
+              <div class="article-header">
+                <span class="source-tag">{{ item.article.source.name }}</span>
+                <a href="{{ item.article.original_url }}" target="_blank" class="article-title">
+                  {{ item.article.title }}
+                </a>
+              </div>
+
+              <div class="use-details">
+                <div class="status-indicator">
+                  <strong>Status:</strong>
+                  <div class="status-ladder">
+                    {% for s in status_ladder %}
+                      <span class="status-step {% if item.use.status == s %}active{% endif %}">
+                        {{ s }}
+                      </span>
+                      {% if not loop.last %} → {% endif %}
+                    {% endfor %}
+                  </div>
+                </div>
+
+                {% if item.use.content_angle %}
+                  <p class="content-angle"><strong>Angle:</strong> {{ item.use.content_angle }}</p>
+                {% endif %}
+
+                {% if item.use.possible_hook %}
+                  <p class="possible-hook"><strong>Hook:</strong> {{ item.use.possible_hook }}</p>
+                {% endif %}
+
+                {% if item.use.related_project %}
+                  <p class="related-project"><strong>Project:</strong> {{ item.use.related_project }}</p>
+                {% endif %}
+              </div>
+            </article>
+          {% endfor %}
+        </div>
+      </section>
+    {% endfor %}
+  {% endif %}
+</main>
+{% endblock %}

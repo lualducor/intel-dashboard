@@ -1,0 +1,46 @@
+<nav class="queue-tabs" aria-label="Triage queues">
+  <button
+    type="button"
+    id="tab-must_read"
+    class="queue-tab{% if active_queue == 'must_read' %} active{% endif %}"
+    data-queue="must_read"
+    hx-get="/feed?queue=must_read"
+    hx-target="#queue"
+    hx-swap="innerHTML"
+  >
+    Must Read <span>{{ counts["must_read"] }}</span>
+  </button>
+  <button
+    type="button"
+    id="tab-maybe_useful"
+    class="queue-tab{% if active_queue == 'maybe_useful' %} active{% endif %}"
+    data-queue="maybe_useful"
+    hx-get="/feed?queue=maybe_useful"
+    hx-target="#queue"
+    hx-swap="innerHTML"
+  >
+    Maybe Useful <span>{{ counts["maybe_useful"] }}</span>
+  </button>
+  <button
+    type="button"
+    id="tab-for_content"
+    class="queue-tab{% if active_queue == 'for_content' %} active{% endif %}"
+    data-queue="for_content"
+    hx-get="/feed?queue=for_content"
+    hx-target="#queue"
+    hx-swap="innerHTML"
+  >
+    For Content <span>{{ counts["for_content"] }}</span>
+  </button>
+  <button
+    type="button"
+    id="tab-noise"
+    class="queue-tab{% if active_queue == 'noise' %} active{% endif %}"
+    data-queue="noise"
+    hx-get="/feed?queue=noise"
+    hx-target="#queue"
+    hx-swap="innerHTML"
+  >
+    Noise <span>{{ counts["noise"] }}</span>
+  </button>
+</nav>
