@@ -1,6 +1,7 @@
 <article class="article-card" data-article-id="{{ a.id }}" tabindex="-1">
   <div class="article-card-header">
-    <span class="score-badge">{{ a.final_score|round(2) }}</span>
+    {% set tier = "high" if a.final_score >= 0.70 else ("mid" if a.final_score >= 0.40 else "low") %}
+    <span class="score-badge score-{{ tier }}" title="Relevance score">{{ a.final_score|round(2) }}</span>
     <h3>
       <a
         href="{% if a.paywalled %}{{ settings.paywall_proxy_prefix ~ a.original_url }}{% else %}{{ a.original_url }}{% endif %}"
@@ -17,7 +18,7 @@
   <p class="article-meta">
     <span>{{ a.source.name if a.source else "Unknown" }}</span>
     <span>{{ a.category or "uncategorized" }}</span>
-    <span>{{ a.urgency }}</span>
+    <span class="urgency-{{ a.urgency }}">{{ a.urgency }}</span>
     <span>{{ a.reading_time_minutes }} min</span>
     <span>{{ published.strftime("%Y-%m-%d %H:%M") if published else "No date" }}</span>
   </p>

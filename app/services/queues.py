@@ -112,6 +112,16 @@ def side_panel_colombia(db: Session, *, limit: int = 8) -> list[Article]:
     return list(db.scalars(stmt))
 
 
+def side_panel_crypto(db: Session, *, limit: int = 6) -> list[Article]:
+    stmt = (
+        select(Article)
+        .where(Article.topic == "crypto", Article.status != "ignored")
+        .order_by(Article.published_at.desc(), Article.final_score.desc())
+        .limit(limit)
+    )
+    return list(db.scalars(stmt))
+
+
 def horoscope_today(db: Session) -> Article | None:
     stmt = (
         select(Article)

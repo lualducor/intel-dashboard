@@ -4,22 +4,31 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}INTEL{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap">
   <link rel="stylesheet" href="/static/style.css">
   <script src="/static/vendor/htmx.min.js"></script>
   <script src="/static/shortcuts.js" defer></script>
 </head>
 <body>
   <header class="top-bar">
-    <a class="brand" href="/">INTEL</a>
-    <button
-      type="button"
-      class="refresh-all"
-      hx-post="/ingest/run"
-      hx-swap="none"
-      hx-on::after-request="window.location.reload()"
-    >
-      ↻ Refresh All
-    </button>
+    <a class="brand" href="/">
+      <span class="status-dot" aria-hidden="true"></span>
+      INTEL
+      <span class="brand-sub">intelligence triage</span>
+    </a>
+    <div class="top-bar-actions">
+      <button
+        type="button"
+        class="refresh-all"
+        hx-post="/ingest/run"
+        hx-swap="none"
+        hx-on::after-request="window.location.reload()"
+      >
+        ↻ Refresh All
+      </button>
+    </div>
   </header>
 
   {% block content %}{% endblock %}

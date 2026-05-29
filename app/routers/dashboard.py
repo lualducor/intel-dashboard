@@ -33,6 +33,7 @@ def index(
             "counts": counts,
             "articles": articles,
             "colombia": queues.side_panel_colombia(db),
+            "crypto": queues.side_panel_crypto(db),
             "horoscope": queues.horoscope_today(db),
             "briefing": briefing.get_latest_briefing(db),
         },

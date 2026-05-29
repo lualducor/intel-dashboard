@@ -8,7 +8,7 @@
 
   <div class="dashboard-grid">
     <section class="triage-inbox" aria-labelledby="triage-title">
-      <h2 id="triage-title">Triage Inbox (AI)</h2>
+      <h2 id="triage-title">Triage Inbox · AI</h2>
       {% include "_queue_tabs.html" %}
       <div id="queue">
         {% include "_card_list.html" %}
@@ -16,16 +16,19 @@
     </section>
 
     <aside class="side-panel" aria-label="Side Panel">
-      <section class="side-section" aria-labelledby="colombia-title">
-        <h2 id="colombia-title">Colombia / Bogotá</h2>
+      <section class="side-section colombia" aria-labelledby="colombia-title">
+        <h2 id="colombia-title">
+          Colombia / Bogotá
+          {% if colombia %}<span class="count">{{ colombia|length }}</span>{% endif %}
+        </h2>
         {% if colombia %}
         <ul class="compact-list">
           {% for a in colombia %}
           <li class="compact-row">
-            <a href="{{ a.original_url }}" target="_blank" rel="noopener noreferrer">
-              {{ a.title }}
-            </a>
-            <span>{{ a.source.name if a.source else "Unknown" }}</span>
+            <a href="{{ a.original_url }}" target="_blank" rel="noopener noreferrer">{{ a.title }}</a>
+            <span class="row-meta">
+              <span class="src">{{ a.source.name if a.source else "Unknown" }}</span>
+            </span>
           </li>
           {% endfor %}
         </ul>
@@ -34,19 +37,30 @@
         {% endif %}
       </section>
 
-      <section class="side-section horoscope-card" aria-labelledby="horoscope-title">
-        <h2 id="horoscope-title">✦ Cancer (today)</h2>
-        {% if horoscope %}
-        <a href="{{ horoscope.original_url }}" target="_blank" rel="noopener noreferrer">
-          {{ horoscope.title }}
-        </a>
-        {% if horoscope.summary %}
-        <p>{{ horoscope.summary|truncate(220) }}</p>
-        {% endif %}
+      <section class="side-section crypto" aria-labelledby="crypto-title">
+        <h2 id="crypto-title">
+          Crypto
+          {% if crypto %}<span class="count">{{ crypto|length }}</span>{% endif %}
+        </h2>
+        {% if crypto %}
+        <ul class="compact-list">
+          {% for a in crypto %}
+          <li class="compact-row">
+            <a href="{{ a.original_url }}" target="_blank" rel="noopener noreferrer">{{ a.title }}</a>
+            <span class="row-meta">
+              <span class="src">{{ a.source.name if a.source else "Unknown" }}</span>
+              {% set published = a.published_at|to_bogota_local %}
+              {% if published %}<span>{{ published.strftime("%b %d") }}</span>{% endif %}
+            </span>
+          </li>
+          {% endfor %}
+        </ul>
         {% else %}
-        <p class="empty-state">No horoscope yet.</p>
+        <p class="empty-state">No crypto headlines yet.</p>
         {% endif %}
       </section>
+
+      {% include "_horoscope.html" %}
     </aside>
   </div>
 </main>

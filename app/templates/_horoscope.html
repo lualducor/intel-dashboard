@@ -1,0 +1,27 @@
+<section id="horoscope" class="side-section horoscope-card" aria-labelledby="horoscope-title">
+  <div class="horoscope-head">
+    <span class="horoscope-glyph" aria-hidden="true">&#9803;</span>
+    <span id="horoscope-title" class="horoscope-title">Cancer</span>
+    {% if horoscope and horoscope.published_at %}
+    <span class="horoscope-date">{{ horoscope.published_at.strftime("%b %d") }}</span>
+    {% endif %}
+    <button
+      type="button"
+      class="horoscope-refresh"
+      title="Refresh horoscope"
+      aria-label="Refresh horoscope"
+      hx-post="/horoscope/refresh"
+      hx-target="#horoscope"
+      hx-swap="outerHTML"
+    >&#8635;</button>
+  </div>
+
+  {% if horoscope %}
+  <p class="horoscope-body">{{ horoscope.summary }}</p>
+  {% elif horoscope_error %}
+  <p class="empty-state">Couldn't reach the horoscope service.</p>
+  <p class="horoscope-error">{{ horoscope_error }}</p>
+  {% else %}
+  <p class="empty-state">No horoscope yet &mdash; press &#8635; to fetch today's.</p>
+  {% endif %}
+</section>

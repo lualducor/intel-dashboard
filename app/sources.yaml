@@ -146,6 +146,31 @@
   default_language: es
   default_country_scope: co
 
+# === Crypto ===
+- slug: cointelegraph
+  name: Cointelegraph
+  url: https://cointelegraph.com/
+  feed_url: https://cointelegraph.com/rss
+  kind: rss
+  source_type: tech_media
+  topic: crypto
+  trust_score: 0.6
+  source_priority: 0.55
+  default_language: en
+  fetch_interval_minutes: 120
+
+- slug: decrypt
+  name: Decrypt
+  url: https://decrypt.co/
+  feed_url: https://decrypt.co/feed
+  kind: rss
+  source_type: tech_media
+  topic: crypto
+  trust_score: 0.6
+  source_priority: 0.5
+  default_language: en
+  fetch_interval_minutes: 120
+
 # === Horoscope (Cancer) ===
 - slug: horoscope-cancer
   name: Horóscopo Cáncer

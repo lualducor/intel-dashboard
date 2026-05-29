@@ -16,6 +16,7 @@ from .routers import (
     dashboard,
     export,
     feed,
+    horoscope,
     ingest,
     notes,
     saved,
@@ -63,6 +64,7 @@ app.mount(
 
 app.include_router(dashboard.router)
 app.include_router(ingest.router)
+app.include_router(horoscope.router)
 app.include_router(feed.router)
 app.include_router(content.router)
 app.include_router(saved.router)
