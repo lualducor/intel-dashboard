@@ -8,7 +8,7 @@
 
   <section class="article-summary">
     <h2>
-      <a href="{{ article.original_url }}" target="_blank">{{ article.title }}</a>
+      <a href="{{ paywall_url(article) }}" target="_blank">{{ article.title }}</a>
     </h2>
     <p>
       <strong>Final Score:</strong> {{ article.final_score | round(4) }}<br>

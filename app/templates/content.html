@@ -19,7 +19,7 @@
             <article class="article-card">
               <div class="article-header">
                 <span class="source-tag">{{ item.article.source.name }}</span>
-                <a href="{{ item.article.original_url }}" target="_blank" class="article-title">
+                <a href="{{ paywall_url(item.article) }}" target="_blank" class="article-title">
                   {{ item.article.title }}
                 </a>
               </div>

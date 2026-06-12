@@ -4,7 +4,7 @@
     <span class="score-badge score-{{ tier }}" title="Relevance score">{{ a.final_score|round(2) }}</span>
     <h3>
       <a
-        href="{% if a.paywalled %}{{ settings.paywall_proxy_prefix ~ a.original_url }}{% else %}{{ a.original_url }}{% endif %}"
+        href="{{ paywall_url(a) }}"
         target="_blank"
         rel="noopener noreferrer"
       >
