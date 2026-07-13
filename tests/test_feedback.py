@@ -81,3 +81,16 @@ def test_negative_actions_lower_affinity(db_factory):
     maps = compute_affinity_maps(db)
     assert maps.source_aff[src.id] < 0.5
     db.close()
+
+
+def test_quick_for_content_action_counts_as_positive_feedback(db_factory):
+    db = db_factory()
+    src, art = _make_article(db)
+    for _ in range(60):
+        db.add(UserAction(article_id=art.id, action="for_content"))
+    db.commit()
+
+    maps = compute_affinity_maps(db)
+    assert maps.total_actions == 60
+    assert maps.source_aff[src.id] > 0.5
+    db.close()

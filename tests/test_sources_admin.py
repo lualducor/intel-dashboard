@@ -51,11 +51,31 @@ def test_sources_admin_routes(db_factory):
 
         response = client.post(
             f"/sources/{source.slug}/edit",
-            data={"trust_score": "0.9", "source_priority": "0.7"},
+            data={
+                "feed_url": "https://example.com/feed.xml",
+                "trust_score": "0.9",
+                "source_priority": "0.7",
+                "fetch_interval_minutes": "120",
+                "max_items_per_fetch": "25",
+                "max_item_age_days": "14",
+            },
         )
         assert response.status_code == 200
         refreshed = db.scalar(select(Source).where(Source.slug == source.slug))
         assert refreshed.trust_score == 0.9
+        assert refreshed.feed_url == "https://example.com/feed.xml"
+        assert refreshed.fetch_interval_minutes == 120
+        assert refreshed.max_items_per_fetch == 25
+        assert refreshed.max_item_age_days == 14
+
+        refreshed.consecutive_failures = 5
+        refreshed.active = False
+        db.commit()
+        response = client.post(f"/sources/{source.slug}/reset")
+        assert response.status_code == 200
+        db.refresh(refreshed)
+        assert refreshed.consecutive_failures == 0
+        assert refreshed.active is True
 
         response = client.get("/sources")
         assert response.status_code == 200

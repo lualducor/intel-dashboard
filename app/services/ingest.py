@@ -162,16 +162,70 @@ async def _ingest_source(
     started_at = datetime.now(timezone.utc)
     items_seen = 0
     items_new = 0
+    items_skipped_old = 0
+    items_skipped_limit = 0
     error: str | None = None
     try:
-        items = await fetch_rss(
+        fetch_result = await fetch_rss(
             source.feed_url,
             user_agent=settings.user_agent,
             timeout=settings.http_timeout_seconds,
+            etag=source.feed_etag,
+            last_modified=source.feed_last_modified,
         )
-        items_seen = len(items)
-        if settings.max_items_per_pass > 0:
-            items = items[: settings.max_items_per_pass]
+        if fetch_result.not_modified:
+            source.consecutive_failures = 0
+            source.last_success_at = now
+            source.last_attempt_at = now
+            db.add(
+                SourceFetchLog(
+                    source_id=source.id,
+                    started_at=started_at,
+                    finished_at=datetime.now(timezone.utc),
+                    ok=True,
+                    items_seen=0,
+                    items_new=0,
+                )
+            )
+            db.commit()
+            return {
+                "slug": source.slug,
+                "ok": True,
+                "not_modified": True,
+                "items_seen": 0,
+                "items_new": 0,
+                "items_skipped_old": 0,
+                "items_skipped_limit": 0,
+            }
+
+        source.feed_etag = fetch_result.etag
+        source.feed_last_modified = fetch_result.last_modified
+        items_seen = len(fetch_result)
+        items = sorted(
+            fetch_result.items,
+            key=lambda item: item.published_at or datetime.min.replace(tzinfo=timezone.utc),
+            reverse=True,
+        )
+
+        if source.max_item_age_days > 0:
+            cutoff = now - timedelta(days=source.max_item_age_days)
+            eligible = [
+                item
+                for item in items
+                if item.published_at is None or item.published_at >= cutoff
+            ]
+            items_skipped_old = len(items) - len(eligible)
+            items = eligible
+
+        positive_limits = [
+            limit
+            for limit in (source.max_items_per_fetch, settings.max_items_per_pass)
+            if limit > 0
+        ]
+        if positive_limits:
+            limit = min(positive_limits)
+            items_skipped_limit = max(0, len(items) - limit)
+            items = items[:limit]
 
         for item in items:
             canonical = normalizer.canonicalize(item.link)
@@ -294,7 +348,15 @@ async def _ingest_source(
             )
         )
         db.commit()
-        return {"slug": source.slug, "ok": True, "items_seen": items_seen, "items_new": items_new}
+        return {
+            "slug": source.slug,
+            "ok": True,
+            "not_modified": False,
+            "items_seen": items_seen,
+            "items_new": items_new,
+            "items_skipped_old": items_skipped_old,
+            "items_skipped_limit": items_skipped_limit,
+        }
 
     except Exception as exc:  # fetch or parse or insert failure
         db.rollback()

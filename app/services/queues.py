@@ -62,7 +62,10 @@ def queue_condition(queue: str, settings: Settings):
         return and_(
             Article.topic == "ai",
             or_(
-                Article.final_score < settings.threshold_maybe_useful,
+                and_(
+                    Article.status == "new",
+                    Article.final_score < settings.threshold_maybe_useful,
+                ),
                 Article.status == "ignored",
             ),
         )
@@ -81,20 +84,47 @@ def feed(
     offset: int = 0,
 ) -> list[Article]:
     """Articles for a queue, with optional filter chips (category / source slug / min_score)."""
-    stmt = select(Article).where(queue_condition(queue, settings))
+    conditions = [queue_condition(queue, settings)]
     if category:
-        stmt = stmt.where(Article.category == category)
-    if source:
-        stmt = stmt.join(Source, Article.source_id == Source.id).where(Source.slug == source)
+        conditions.append(Article.category == category)
     if min_score is not None:
-        stmt = stmt.where(Article.final_score >= min_score)
+        conditions.append(Article.final_score >= min_score)
+
     # The id tie-breaker keeps offset pagination stable when score and publication
     # timestamps match (a common case for articles imported in the same batch).
-    stmt = stmt.order_by(
+    score_order = (
         Article.final_score.desc(),
         Article.published_at.desc(),
         Article.id.desc(),
     )
+
+    if queue in {"must_read", "maybe_useful"} and source is None:
+        # Rank within each source, then order by that rank. This round-robin shape
+        # prevents a firehose such as arXiv from occupying every slot while still
+        # keeping every article reachable on later pages.
+        ranked = (
+            select(
+                Article.id.label("article_id"),
+                func.row_number()
+                .over(partition_by=Article.source_id, order_by=score_order)
+                .label("source_rank"),
+            )
+            .where(*conditions)
+            .subquery()
+        )
+        stmt = (
+            select(Article)
+            .join(ranked, Article.id == ranked.c.article_id)
+            .order_by(ranked.c.source_rank.asc(), *score_order)
+        )
+    else:
+        stmt = select(Article).where(*conditions)
+        if source:
+            stmt = stmt.join(Source, Article.source_id == Source.id).where(
+                Source.slug == source
+            )
+        stmt = stmt.order_by(*score_order)
+
     if offset:
         stmt = stmt.offset(offset)
     if limit is not None:

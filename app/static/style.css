@@ -564,6 +564,7 @@ button.refresh-all:hover {
 input[type="text"],
 input[type="search"],
 input[type="number"],
+input[type="url"],
 textarea,
 select {
   width: 100%;
@@ -582,6 +583,29 @@ input:focus, textarea:focus, select:focus {
   box-shadow: 0 0 0 3px var(--accent-soft);
 }
 textarea { resize: vertical; min-height: 64px; }
+
+.source-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 2fr) repeat(5, minmax(90px, 1fr)) auto;
+  align-items: end;
+  gap: 0.5rem;
+  min-width: 780px;
+}
+.source-controls label {
+  display: grid;
+  gap: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+}
+.source-test-result {
+  max-width: 240px;
+  margin-top: 0.4rem;
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  overflow-wrap: anywhere;
+}
+.page { overflow-x: auto; }
 
 /* ============ Side sections ============ */
 .side-section {

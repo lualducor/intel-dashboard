@@ -1,5 +1,5 @@
 <tr id="source-{{ source.slug }}">
-  <td>{{ source.name }}</td>
+  <td>{{ source.name }}<br><small>{{ source.slug }}</small></td>
   <td>{{ source.topic }}</td>
   <td>
     <button
@@ -11,12 +11,19 @@
       {% if source.active %}On{% else %}Off{% endif %}
     </button>
   </td>
-  <td colspan="2">
+  <td>
     <form
+      class="source-controls"
       hx-post="/sources/{{ source.slug }}/edit"
       hx-target="#source-{{ source.slug }}"
       hx-swap="outerHTML"
     >
+      <label>
+        Feed URL
+        <input type="url" name="feed_url" value="{{ source.feed_url or '' }}"{% if source.kind == 'rss' %} required{% endif %}>
+      </label>
+      <label>
+        Trust
       <input
         type="number"
         name="trust_score"
@@ -25,6 +32,9 @@
         min="0"
         max="1"
       >
+      </label>
+      <label>
+        Priority
       <input
         type="number"
         name="source_priority"
@@ -33,7 +43,35 @@
         min="0"
         max="1"
       >
+      </label>
+      <label>
+        Every (minutes)
+        <input type="number" name="fetch_interval_minutes" value="{{ source.fetch_interval_minutes }}" min="5" max="10080">
+      </label>
+      <label>
+        Max items
+        <input type="number" name="max_items_per_fetch" value="{{ source.max_items_per_fetch }}" min="0" max="1000">
+      </label>
+      <label>
+        Max age (days)
+        <input type="number" name="max_item_age_days" value="{{ source.max_item_age_days }}" min="0" max="3650">
+      </label>
       <button type="submit">Save</button>
     </form>
+  </td>
+  <td>
+    <button
+      type="button"
+      hx-post="/sources/{{ source.slug }}/reset"
+      hx-target="#source-{{ source.slug }}"
+      hx-swap="outerHTML"
+    >Reset</button>
+    <button
+      type="button"
+      hx-post="/ingest/test/{{ source.slug }}"
+      hx-target="#source-test-{{ source.slug }}"
+      hx-swap="innerHTML"
+    >Test</button>
+    <div id="source-test-{{ source.slug }}" class="source-test-result" aria-live="polite"></div>
   </td>
 </tr>

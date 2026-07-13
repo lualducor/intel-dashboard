@@ -1,5 +1,6 @@
 import httpx
 import respx
+from datetime import datetime, timezone
 from sqlalchemy import func, select
 
 from app.models import Article, ScoreRun, Source
@@ -94,3 +95,75 @@ async def test_run_ingest_failure_marks_source(db_factory):
     assert src.consecutive_failures == 1
     assert src.last_error_at is not None
     db.close()
+
+
+async def test_ingest_applies_source_age_and_item_limits(db_factory):
+    db = db_factory()
+    db.add(
+        Source(
+            slug="limited",
+            name="Limited",
+            url="https://limited.local",
+            feed_url="https://limited.local/feed.xml",
+            kind="rss",
+            source_type="official_blog",
+            topic="ai",
+            max_items_per_fetch=1,
+            max_item_age_days=7,
+        )
+    )
+    db.commit()
+    db.close()
+    feed = """<?xml version="1.0"?><rss version="2.0"><channel><title>Limited</title>
+    <item><title>Recent one</title><link>https://limited.local/1</link><pubDate>Wed, 27 May 2026 12:00:00 GMT</pubDate></item>
+    <item><title>Recent two</title><link>https://limited.local/2</link><pubDate>Tue, 26 May 2026 12:00:00 GMT</pubDate></item>
+    <item><title>Historical</title><link>https://limited.local/old</link><pubDate>Fri, 01 May 2026 12:00:00 GMT</pubDate></item>
+    </channel></rss>"""
+
+    with respx.mock:
+        respx.get("https://limited.local/feed.xml").mock(
+            return_value=httpx.Response(
+                200,
+                text=feed,
+                headers={"ETag": '"limited-v1"', "Last-Modified": "Wed, 27 May 2026 13:00:00 GMT"},
+            )
+        )
+        result = await ingest.run_ingest(
+            session_factory=db_factory,
+            force=True,
+            now=datetime(2026, 5, 28, tzinfo=timezone.utc),
+        )
+
+    source_result = result["sources"][0]
+    assert source_result["items_seen"] == 3
+    assert source_result["items_skipped_old"] == 1
+    assert source_result["items_skipped_limit"] == 1
+    assert source_result["items_new"] == 1
+
+    db = db_factory()
+    source = db.scalar(select(Source).where(Source.slug == "limited"))
+    assert source.feed_etag == '"limited-v1"'
+    assert source.feed_last_modified == "Wed, 27 May 2026 13:00:00 GMT"
+    assert db.scalar(select(func.count()).select_from(Article)) == 1
+    db.close()
+
+
+async def test_ingest_not_modified_is_a_successful_noop(db_factory):
+    _seed_source(db_factory)
+    db = db_factory()
+    source = db.scalar(select(Source).where(Source.slug == "test"))
+    source.feed_etag = '"test-v1"'
+    db.commit()
+    db.close()
+
+    def responder(request):
+        assert request.headers["if-none-match"] == '"test-v1"'
+        return httpx.Response(304)
+
+    with respx.mock:
+        respx.get(FEED_URL).mock(side_effect=responder)
+        result = await ingest.run_ingest(session_factory=db_factory, force=True)
+
+    assert result["sources"][0]["ok"] is True
+    assert result["sources"][0]["not_modified"] is True
+    assert result["totals"]["items_new"] == 0

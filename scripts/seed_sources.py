@@ -25,6 +25,8 @@ _DEFAULTS = {
     "paywalled": False,
     "active": True,
     "fetch_interval_minutes": 60,
+    "max_items_per_fetch": 50,
+    "max_item_age_days": 90,
     "default_language": "en",
     "default_country_scope": "global",
 }

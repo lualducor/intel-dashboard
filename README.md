@@ -41,6 +41,10 @@ UI (IBM Plex Sans/Mono).
   job, with an angle and hook).
 - **Source health** monitoring with automatic exponential backoff and deactivation of
   failing feeds.
+- **Feed guardrails** per source: maximum article age, maximum items per fetch,
+  conditional HTTP requests (ETag / Last-Modified), and strict empty-feed detection.
+- **Source-balanced queues** that interleave publishers so one research firehose cannot
+  occupy every visible Must-Read slot.
 - **Config & knowledge export**, DB backup/prune scripts, and a score-debug view.
 - **Local-first by design** — no external accounts, no telemetry; the optional AI
   enrichment schema stays out of the ingest path.
@@ -93,9 +97,13 @@ Settings load from environment variables (prefix `INTEL_`) or a `.env` file. See
 | `INTEL_FEED_PAGE_SIZE` | `50` | cards loaded per dashboard page (max 200) |
 | `INTEL_DISPLAY_TZ` | `America/Bogota` | timezone for displayed timestamps |
 | `INTEL_HTTP_TIMEOUT_SECONDS` | `15` | per-request fetch timeout |
+| `INTEL_MAX_ITEMS_PER_PASS` | `0` | optional global emergency cap; `0` leaves per-source caps in control |
 | `INTEL_PRUNE_DAYS` | `180` | retention window for pruning |
 
-**Sources** are defined in `app/sources.yaml` (slug, feed URL, topic, trust/priority).
+**Sources** are defined in `app/sources.yaml` (slug, feed URL, topic, trust/priority,
+fetch interval, `max_items_per_fetch`, and `max_item_age_days`). The Sources page can
+edit those operational controls, test a feed, and reset a disabled source. Re-running
+the seeder reapplies the YAML values, so commit durable source-policy changes there.
 **Interests** — keyword buckets, weights, and category priorities — live in
 `app/interests.yaml` and drive the keyword/category scores. Edit either file and re-run
 `python -m scripts.seed_sources` to apply source changes.
@@ -143,14 +151,18 @@ used, Colombia, crypto, and horoscope items are never affected by that bulk acti
 
 ```
 acquire file lock → read active sources → for each due source:
-  fetch RSS (outside any DB txn) → normalize + dedupe → tag + categorize →
+  conditionally fetch RSS (outside any DB txn) → apply source age/item limits →
+  normalize + dedupe → tag + categorize →
   score (deterministic) → insert article + tags + score_run → update source health
 ```
 
 HTTP and parsing happen outside DB transactions; a file lock prevents overlapping
 ingest passes. Due-time uses exponential backoff per source based on consecutive
-failures. The horoscope is fetched out-of-band from a JSON API (the RSS feed is
-unreliable) and upserted as a single `topic=horoscope` article per day.
+failures. Successful feeds persist ETag and Last-Modified validators, while HTTP 304
+responses are recorded as successful no-op fetches. Empty or unusable feeds count as
+failures instead of silently appearing healthy. The horoscope is fetched out-of-band
+from a JSON API (the RSS feed is unreliable) and upserted as a single
+`topic=horoscope` article per day.
 
 ---
 

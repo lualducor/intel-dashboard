@@ -2,7 +2,7 @@ import pytest
 import respx
 import httpx
 from pathlib import Path
-from app.services.rss import fetch_rss
+from app.services.rss import EmptyFeedError, fetch_rss
 
 SAMPLE_RSS = """<?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
@@ -72,3 +72,36 @@ async def test_fetch_rss_from_fixture():
         assert "MCP" in items[0].summary
         assert items[0].published_at is not None
         assert items[0].published_at.year == 2024
+
+
+@pytest.mark.asyncio
+async def test_fetch_rss_sends_cache_headers_and_handles_not_modified():
+    url = "https://example.com/cached.xml"
+
+    def responder(request):
+        assert request.headers["if-none-match"] == '"feed-v1"'
+        assert request.headers["if-modified-since"] == "Mon, 01 Jun 2026 00:00:00 GMT"
+        return httpx.Response(304)
+
+    with respx.mock:
+        respx.get(url).mock(side_effect=responder)
+        result = await fetch_rss(
+            url,
+            user_agent="test",
+            timeout=5.0,
+            etag='"feed-v1"',
+            last_modified="Mon, 01 Jun 2026 00:00:00 GMT",
+        )
+
+    assert result.not_modified is True
+    assert len(result) == 0
+
+
+@pytest.mark.asyncio
+async def test_fetch_rss_rejects_empty_feed():
+    url = "https://example.com/empty.xml"
+    empty = "<rss version='2.0'><channel><title>Empty</title></channel></rss>"
+    with respx.mock:
+        respx.get(url).mock(return_value=httpx.Response(200, text=empty))
+        with pytest.raises(EmptyFeedError):
+            await fetch_rss(url, user_agent="test", timeout=5.0)

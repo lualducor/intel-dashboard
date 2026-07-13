@@ -14,6 +14,8 @@
   topic: ai
   trust_score: 0.95
   source_priority: 0.9
+  max_items_per_fetch: 20
+  max_item_age_days: 90
   default_language: en
   default_country_scope: global
 
@@ -26,6 +28,8 @@
   topic: ai
   trust_score: 0.85
   source_priority: 0.8
+  max_items_per_fetch: 30
+  max_item_age_days: 45
   default_language: en
 
 - slug: google-deepmind
@@ -37,6 +41,8 @@
   topic: ai
   trust_score: 0.9
   source_priority: 0.8
+  max_items_per_fetch: 30
+  max_item_age_days: 90
   default_language: en
 
 - slug: huggingface-blog
@@ -48,6 +54,8 @@
   topic: ai
   trust_score: 0.85
   source_priority: 0.8
+  max_items_per_fetch: 30
+  max_item_age_days: 45
   default_language: en
 
 - slug: simonwillison
@@ -59,6 +67,8 @@
   topic: ai
   trust_score: 0.9
   source_priority: 0.9
+  max_items_per_fetch: 30
+  max_item_age_days: 60
   default_language: en
 
 - slug: latent-space
@@ -70,6 +80,8 @@
   topic: ai
   trust_score: 0.8
   source_priority: 0.75
+  max_items_per_fetch: 20
+  max_item_age_days: 90
   default_language: en
 
 - slug: ai-snake-oil
@@ -81,6 +93,8 @@
   topic: ai
   trust_score: 0.85
   source_priority: 0.7
+  max_items_per_fetch: 20
+  max_item_age_days: 90
   default_language: en
 
 - slug: arxiv-cs-ai
@@ -92,6 +106,8 @@
   topic: ai
   trust_score: 0.75
   source_priority: 0.6
+  max_items_per_fetch: 25
+  max_item_age_days: 7
   default_language: en
 
 # === Colombia / Bogotá ===
@@ -104,6 +120,8 @@
   topic: colombia
   trust_score: 0.7
   source_priority: 0.7
+  max_items_per_fetch: 20
+  max_item_age_days: 30
   paywalled: true
   default_language: es
   default_country_scope: co
@@ -118,6 +136,8 @@
   topic: colombia
   trust_score: 0.6
   source_priority: 0.55
+  max_items_per_fetch: 20
+  max_item_age_days: 30
   default_language: es
   default_country_scope: co
 
@@ -130,6 +150,8 @@
   topic: colombia
   trust_score: 0.8
   source_priority: 0.7
+  max_items_per_fetch: 20
+  max_item_age_days: 30
   default_language: es
   default_country_scope: co
 
@@ -143,6 +165,8 @@
   topic: colombia
   trust_score: 0.75
   source_priority: 0.6
+  max_items_per_fetch: 20
+  max_item_age_days: 30
   default_language: es
   default_country_scope: co
 
@@ -158,6 +182,8 @@
   source_priority: 0.55
   default_language: en
   fetch_interval_minutes: 120
+  max_items_per_fetch: 30
+  max_item_age_days: 14
 
 - slug: decrypt
   name: Decrypt
@@ -170,6 +196,8 @@
   source_priority: 0.5
   default_language: en
   fetch_interval_minutes: 120
+  max_items_per_fetch: 30
+  max_item_age_days: 14
 
 # === Horoscope (Cancer) ===
 - slug: horoscope-cancer
@@ -184,3 +212,5 @@
   source_priority: 0.2
   default_language: en
   fetch_interval_minutes: 720
+  max_items_per_fetch: 1
+  max_item_age_days: 2

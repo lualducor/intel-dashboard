@@ -1,7 +1,14 @@
-from dataclasses import dataclass
 from datetime import datetime, timezone
-import httpx
+from dataclasses import dataclass
+from typing import Iterator
+
 import feedparser
+import httpx
+
+
+class EmptyFeedError(ValueError):
+    """Raised when an HTTP-successful feed contains no usable entries."""
+
 
 @dataclass
 class RssItem:
@@ -12,21 +19,58 @@ class RssItem:
     published_at: datetime | None   # MUST be timezone-aware UTC, or None
     language: str | None
 
-async def fetch_rss(feed_url: str, *, user_agent: str, timeout: float) -> list[RssItem]:
+
+@dataclass
+class RssFetchResult:
+    items: list[RssItem]
+    etag: str | None = None
+    last_modified: str | None = None
+    not_modified: bool = False
+
+    def __len__(self) -> int:
+        return len(self.items)
+
+    def __iter__(self) -> Iterator[RssItem]:
+        return iter(self.items)
+
+    def __getitem__(self, index):
+        return self.items[index]
+
+
+async def fetch_rss(
+    feed_url: str,
+    *,
+    user_agent: str,
+    timeout: float,
+    etag: str | None = None,
+    last_modified: str | None = None,
+) -> RssFetchResult:
     headers = {"User-Agent": user_agent}
+    if etag:
+        headers["If-None-Match"] = etag
+    if last_modified:
+        headers["If-Modified-Since"] = last_modified
+
     async with httpx.AsyncClient(follow_redirects=True) as client:
         resp = await client.get(feed_url, headers=headers, timeout=timeout)
+        if resp.status_code == 304:
+            return RssFetchResult(
+                items=[],
+                etag=etag,
+                last_modified=last_modified,
+                not_modified=True,
+            )
         resp.raise_for_status()
         content = resp.content
 
     parsed = feedparser.parse(content)
-    items = []
+    items: list[RssItem] = []
 
     for entry in parsed.entries:
         title = entry.get("title", "")
         link = entry.get("link", "")
         
-        if not title and not link:
+        if not title or not link:
             continue
             
         summary = entry.get("summary") or entry.get("description") or None
@@ -39,13 +83,23 @@ async def fetch_rss(feed_url: str, *, user_agent: str, timeout: float) -> list[R
             
         language = entry.get("language") or parsed.feed.get("language") or None
         
-        items.append(RssItem(
-            title=title,
-            link=link,
-            summary=summary,
-            author=author,
-            published_at=published_at,
-            language=language
-        ))
-        
-    return items
+        items.append(
+            RssItem(
+                title=title,
+                link=link,
+                summary=summary,
+                author=author,
+                published_at=published_at,
+                language=language,
+            )
+        )
+
+    if not items:
+        detail = f": {parsed.bozo_exception}" if parsed.bozo else ""
+        raise EmptyFeedError(f"feed contained no usable entries{detail}")
+
+    return RssFetchResult(
+        items=items,
+        etag=resp.headers.get("etag"),
+        last_modified=resp.headers.get("last-modified"),
+    )

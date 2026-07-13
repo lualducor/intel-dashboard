@@ -68,6 +68,12 @@ class Source(Base):
     fetch_interval_minutes: Mapped[int] = mapped_column(
         Integer, nullable=False, default=60
     )
+    max_items_per_fetch: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=50
+    )
+    max_item_age_days: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=90
+    )
     default_language: Mapped[str] = mapped_column(String, nullable=False, default="en")
     default_country_scope: Mapped[str] = mapped_column(
         String, nullable=False, default="global"
@@ -87,6 +93,8 @@ class Source(Base):
     avg_items_per_fetch: Mapped[float] = mapped_column(
         Float, nullable=False, default=0.0
     )
+    feed_etag: Mapped[str | None] = mapped_column(String, nullable=True)
+    feed_last_modified: Mapped[str | None] = mapped_column(String, nullable=True)
     robots_policy_note: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, default=_utcnow

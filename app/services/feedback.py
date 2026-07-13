@@ -21,6 +21,7 @@ from ..models import Article, UserAction
 ACTION_WEIGHTS: dict[str, float] = {
     "useful": 1.0,
     "used_for_content": 1.0,
+    "for_content": 1.0,
     "important": 0.8,
     "save": 0.5,
     "followup": 0.5,

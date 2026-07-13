@@ -65,6 +65,10 @@ def test_queue_assignment_logic(db_factory):
     # 6. AI, saved but NO ArticleUse -> NOT for_content
     a6 = create_article("Saved No Use AI", 0.6, status="saved", dedup_suffix="6")
     db.add(a6)
+
+    # 7. Archived/saved low-score items must not leak back into Noise.
+    db.add(create_article("Archived Low AI", 0.1, status="archived", dedup_suffix="7"))
+    db.add(create_article("Saved Low AI", 0.1, status="saved", dedup_suffix="8"))
     
     db.commit()
 
@@ -102,3 +106,68 @@ def test_queue_assignment_logic(db_factory):
     assert counts["maybe_useful"] == 1
     assert counts["for_content"] == 1
     assert counts["noise"] == 2
+
+
+def test_ranked_queues_interleave_sources(db_factory):
+    db = db_factory()
+    settings = get_settings()
+    sources = []
+    for slug in ("dominant", "diverse"):
+        source = Source(
+            slug=slug,
+            name=slug.title(),
+            url=f"https://{slug}.example",
+            kind="rss",
+            source_type="news",
+            topic="ai",
+        )
+        db.add(source)
+        sources.append(source)
+    db.flush()
+
+    for index, score in enumerate((0.99, 0.98, 0.97)):
+        db.add(
+            Article(
+                source_id=sources[0].id,
+                title=f"Dominant {index}",
+                raw_title=f"Dominant {index}",
+                normalized_title=f"dominant {index}",
+                original_url=f"https://dominant.example/{index}",
+                canonical_url=f"https://dominant.example/{index}",
+                dedup_hash=f"dominant-{index}",
+                content_hash=f"dominant-content-{index}",
+                language="en",
+                country_scope="global",
+                topic="ai",
+                urgency="normal",
+                reading_time_minutes=1,
+                scraping_method="rss",
+                final_score=score,
+                status="new",
+            )
+        )
+    db.add(
+        Article(
+            source_id=sources[1].id,
+            title="Diverse 0",
+            raw_title="Diverse 0",
+            normalized_title="diverse 0",
+            original_url="https://diverse.example/0",
+            canonical_url="https://diverse.example/0",
+            dedup_hash="diverse-0",
+            content_hash="diverse-content-0",
+            language="en",
+            country_scope="global",
+            topic="ai",
+            urgency="normal",
+            reading_time_minutes=1,
+            scraping_method="rss",
+            final_score=0.90,
+            status="new",
+        )
+    )
+    db.commit()
+
+    page = queues.feed(db, settings, queue="must_read", limit=2)
+    assert {article.source.slug for article in page} == {"dominant", "diverse"}
+    db.close()

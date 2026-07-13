@@ -24,16 +24,14 @@ async def _check(entry: dict, settings) -> tuple[str, bool, int, str | None]:
     if not feed_url:
         return (slug, False, 0, "no feed_url")
     try:
-        items = await fetch_rss(
+        result = await fetch_rss(
             feed_url,
             user_agent=settings.user_agent,
             timeout=settings.http_timeout_seconds,
         )
     except Exception as exc:  # noqa: BLE001
         return (slug, False, 0, f"{type(exc).__name__}: {exc}")
-    if not items:
-        return (slug, False, 0, "empty feed")
-    return (slug, True, len(items), None)
+    return (slug, True, len(result), None)
 
 
 async def main() -> None:
