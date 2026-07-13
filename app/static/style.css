@@ -219,6 +219,11 @@ button.refresh-all:hover {
   margin-top: 1.5rem;
 }
 
+.dashboard-grid.tech-only {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1120px;
+}
+
 .triage-inbox { min-width: 0; }
 
 .bulk-toolbar {

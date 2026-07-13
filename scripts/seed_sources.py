@@ -29,6 +29,7 @@ _DEFAULTS = {
     "max_item_age_days": 90,
     "default_language": "en",
     "default_country_scope": "global",
+    "robots_policy_note": None,
 }
 
 

@@ -7,6 +7,8 @@ filter partial, and tests all share one source of truth.
 
 from __future__ import annotations
 
+from collections.abc import Collection
+
 from sqlalchemy import and_, exists, func, or_, select
 from sqlalchemy.orm import Session
 
@@ -14,6 +16,17 @@ from ..config import Settings
 from ..models import Article, ArticleUse, Note, Source
 
 QUEUES = ("must_read", "maybe_useful", "for_content", "noise")
+
+TECH_HARDWARE_SOURCE_SLUGS = (
+    "xda",
+    "radware-blog",
+    "xataka",
+    "afr-technology",
+    "techradar",
+    "yahoo-tech",
+    "sciencedaily-ai",
+    "toms-hardware",
+)
 
 SAVED_STATUSES = ("saved", "important", "followup", "used")
 SAVED_FILTERS = (
@@ -79,6 +92,7 @@ def feed(
     queue: str,
     category: str | None = None,
     source: str | None = None,
+    source_slugs: Collection[str] | None = None,
     min_score: float | None = None,
     limit: int | None = None,
     offset: int = 0,
@@ -89,6 +103,8 @@ def feed(
         conditions.append(Article.category == category)
     if min_score is not None:
         conditions.append(Article.final_score >= min_score)
+    if source_slugs is not None:
+        conditions.append(Article.source.has(Source.slug.in_(tuple(source_slugs))))
 
     # The id tie-breaker keeps offset pagination stable when score and publication
     # timestamps match (a common case for articles imported in the same batch).
@@ -132,11 +148,19 @@ def feed(
     return list(db.scalars(stmt))
 
 
-def queue_counts(db: Session, settings: Settings) -> dict[str, int]:
+def queue_counts(
+    db: Session,
+    settings: Settings,
+    *,
+    source_slugs: Collection[str] | None = None,
+) -> dict[str, int]:
     counts = {}
     for queue in QUEUES:
+        conditions = [queue_condition(queue, settings)]
+        if source_slugs is not None:
+            conditions.append(Article.source.has(Source.slug.in_(tuple(source_slugs))))
         counts[queue] = db.scalar(
-            select(func.count()).select_from(Article).where(queue_condition(queue, settings))
+            select(func.count()).select_from(Article).where(*conditions)
         )
     return counts
 

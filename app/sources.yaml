@@ -192,6 +192,120 @@
   default_language: en
   default_country_scope: global
 
+- slug: xda
+  name: XDA
+  url: https://www.xda-developers.com/
+  feed_url: https://www.xda-developers.com/feed/
+  kind: rss
+  source_type: tech_media
+  topic: ai
+  trust_score: 0.72
+  source_priority: 0.7
+  max_items_per_fetch: 20
+  max_item_age_days: 21
+  default_language: en
+  default_country_scope: global
+
+- slug: radware-blog
+  name: Radware Blog
+  url: https://www.radware.com/blog/
+  feed_url: https://r.jina.ai/https://www.radware.com/blog/
+  kind: html
+  source_type: tech_media
+  topic: ai
+  trust_score: 0.82
+  source_priority: 0.75
+  max_items_per_fetch: 15
+  max_item_age_days: 45
+  default_language: en
+  default_country_scope: global
+  robots_policy_note: Direct feed and listing return a Radware anti-bot challenge; read-only text mirror preserves canonical article URLs.
+
+- slug: xataka
+  name: Xataka
+  url: https://www.xataka.com/
+  feed_url: https://www.xataka.com/feedburner.xml
+  kind: rss
+  source_type: tech_media
+  topic: ai
+  trust_score: 0.72
+  source_priority: 0.7
+  max_items_per_fetch: 20
+  max_item_age_days: 21
+  default_language: es
+  default_country_scope: global
+
+- slug: afr-technology
+  name: AFR Technology
+  url: https://www.afr.com/technology
+  feed_url: https://www.afr.com/technology
+  kind: html
+  source_type: tech_media
+  topic: ai
+  trust_score: 0.8
+  source_priority: 0.7
+  paywalled: true
+  max_items_per_fetch: 15
+  max_item_age_days: 30
+  default_language: en
+  default_country_scope: au
+
+- slug: techradar
+  name: TechRadar
+  url: https://www.techradar.com/
+  feed_url: https://www.techradar.com/feeds.xml
+  kind: rss
+  source_type: tech_media
+  topic: ai
+  trust_score: 0.7
+  source_priority: 0.65
+  max_items_per_fetch: 20
+  max_item_age_days: 21
+  default_language: en
+  default_country_scope: global
+
+- slug: yahoo-tech
+  name: Yahoo Tech
+  url: https://tech.yahoo.com/
+  feed_url: https://tech.yahoo.com/
+  kind: html
+  source_type: tech_media
+  topic: ai
+  trust_score: 0.68
+  source_priority: 0.65
+  max_items_per_fetch: 20
+  max_item_age_days: 21
+  default_language: en
+  default_country_scope: global
+
+- slug: sciencedaily-ai
+  name: ScienceDaily — Artificial Intelligence
+  url: https://www.sciencedaily.com/news/computers_math/artificial_intelligence/
+  feed_url: https://www.sciencedaily.com/rss/computers_math/artificial_intelligence.xml
+  kind: rss
+  source_type: research
+  topic: ai
+  trust_score: 0.78
+  source_priority: 0.75
+  max_items_per_fetch: 15
+  max_item_age_days: 60
+  default_language: en
+  default_country_scope: global
+
+- slug: toms-hardware
+  name: Tom's Hardware
+  url: https://www.tomshardware.com/
+  feed_url: https://www.tomshardware.com/feeds.xml
+  kind: rss
+  source_type: tech_media
+  topic: ai
+  trust_score: 0.75
+  source_priority: 0.7
+  max_items_per_fetch: 20
+  max_item_age_days: 30
+  default_language: en
+  default_country_scope: global
+
 # === Colombia / Bogotá ===
 - slug: eltiempo-bogota
   name: El Tiempo — Bogotá
@@ -278,6 +392,20 @@
   source_priority: 0.75
   max_items_per_fetch: 15
   max_item_age_days: 30
+  default_language: es
+  default_country_scope: co
+
+- slug: infobae-colombia
+  name: Infobae Colombia
+  url: https://www.infobae.com/colombia/
+  feed_url: https://www.infobae.com/arc/outboundfeeds/rss/category/colombia/?outputType=xml
+  kind: rss
+  source_type: local_news
+  topic: colombia
+  trust_score: 0.65
+  source_priority: 0.6
+  max_items_per_fetch: 20
+  max_item_age_days: 21
   default_language: es
   default_country_scope: co
 

@@ -4,7 +4,7 @@
     id="tab-must_read"
     class="queue-tab{% if active_queue == 'must_read' %} active{% endif %}"
     data-queue="must_read"
-    hx-get="/feed?queue=must_read"
+    hx-get="/feed?queue=must_read{% if feed_view %}&view={{ feed_view|urlencode }}{% endif %}"
     hx-target="#queue"
     hx-swap="innerHTML"
   >
@@ -15,7 +15,7 @@
     id="tab-maybe_useful"
     class="queue-tab{% if active_queue == 'maybe_useful' %} active{% endif %}"
     data-queue="maybe_useful"
-    hx-get="/feed?queue=maybe_useful"
+    hx-get="/feed?queue=maybe_useful{% if feed_view %}&view={{ feed_view|urlencode }}{% endif %}"
     hx-target="#queue"
     hx-swap="innerHTML"
   >
@@ -26,7 +26,7 @@
     id="tab-for_content"
     class="queue-tab{% if active_queue == 'for_content' %} active{% endif %}"
     data-queue="for_content"
-    hx-get="/feed?queue=for_content"
+    hx-get="/feed?queue=for_content{% if feed_view %}&view={{ feed_view|urlencode }}{% endif %}"
     hx-target="#queue"
     hx-swap="innerHTML"
   >
@@ -37,7 +37,7 @@
     id="tab-noise"
     class="queue-tab{% if active_queue == 'noise' %} active{% endif %}"
     data-queue="noise"
-    hx-get="/feed?queue=noise"
+    hx-get="/feed?queue=noise{% if feed_view %}&view={{ feed_view|urlencode }}{% endif %}"
     hx-target="#queue"
     hx-swap="innerHTML"
   >

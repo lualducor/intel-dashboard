@@ -171,3 +171,56 @@ def test_ranked_queues_interleave_sources(db_factory):
     page = queues.feed(db, settings, queue="must_read", limit=2)
     assert {article.source.slug for article in page} == {"dominant", "diverse"}
     db.close()
+
+
+def test_queue_source_collection_scope(db_factory):
+    db = db_factory()
+    settings = get_settings()
+    for index, slug in enumerate(("xda", "unrelated-ai")):
+        source = Source(
+            slug=slug,
+            name=slug,
+            url=f"https://{slug}.example",
+            kind="rss",
+            source_type="tech_media",
+            topic="ai",
+        )
+        db.add(source)
+        db.flush()
+        db.add(
+            Article(
+                source_id=source.id,
+                title=f"Story {slug}",
+                raw_title=f"Story {slug}",
+                normalized_title=f"story {slug}",
+                original_url=f"https://{slug}.example/story",
+                canonical_url=f"https://{slug}.example/story",
+                dedup_hash=f"scope-{index}",
+                content_hash=f"scope-content-{index}",
+                language="en",
+                country_scope="global",
+                topic="ai",
+                urgency="normal",
+                reading_time_minutes=1,
+                scraping_method="rss",
+                final_score=0.9,
+                status="new",
+            )
+        )
+    db.commit()
+
+    articles = queues.feed(
+        db,
+        settings,
+        queue="must_read",
+        source_slugs=queues.TECH_HARDWARE_SOURCE_SLUGS,
+    )
+    counts = queues.queue_counts(
+        db,
+        settings,
+        source_slugs=queues.TECH_HARDWARE_SOURCE_SLUGS,
+    )
+
+    assert [article.source.slug for article in articles] == ["xda"]
+    assert counts["must_read"] == 1
+    db.close()

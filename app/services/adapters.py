@@ -19,6 +19,19 @@ _ENGLISH_DATE_RE = re.compile(
     re.IGNORECASE,
 )
 _URL_DATE_RE = re.compile(r"/(20\d{2})/(\d{2})/(\d{2})/")
+_RADWARE_MIRROR_ITEM_RE = re.compile(
+    r"\[!\[Image \d+: (?P<title>[^\]]+)\]\([^)]+\)"
+    r"(?P<body>.*?)\*\*\|\*\*(?P<date>"
+    r"(?:January|February|March|April|May|June|July|August|September|October|"
+    r"November|December)\s+\d{1,2},\s+20\d{2})\]"
+    r"\((?P<link>https://www\.radware\.com/blog/posts/[^)]+)\)",
+    re.DOTALL,
+)
+_YAHOO_STORY_RE = re.compile(
+    r'"canonicalUrl":"(?P<link>https://tech\.yahoo\.com/[^"\\]+/article/[^"\\]+)"'
+    r'[^{}]{0,1000}?"displayTime":"(?P<date>[^"\\]+)"'
+    r'[^{}]{0,1000}?"headline":"(?P<title>(?:\\.|[^"\\])*)"'
+)
 _SPANISH_MONTHS = {
     "ene": 1,
     "enero": 1,
@@ -249,12 +262,95 @@ def _microsoft_ai_items(soup: BeautifulSoup, base_url: str) -> list[RssItem]:
     return items
 
 
+def _afr_technology_items(soup: BeautifulSoup, base_url: str) -> list[RssItem]:
+    items = []
+    for anchor in soup.select('h3 a[href^="/technology/"]'):
+        card = anchor.find_parent(attrs={"data-testid": "StoryTileBase"})
+        if card is None:
+            continue
+        title = anchor.get_text(" ", strip=True)
+        link = urljoin(base_url, anchor.get("href", "").strip())
+        if not title or not link:
+            continue
+        summary = card.select_one('[data-pb-type="ab"]')
+        time_tag = card.select_one("time")
+        author = card.select_one('[data-pb-type="au"]')
+        items.append(
+            RssItem(
+                title=title,
+                link=link,
+                summary=summary.get_text(" ", strip=True) if summary else None,
+                author=author.get_text(" ", strip=True) if author else None,
+                published_at=(
+                    _parse_date_text(time_tag.get("datetime"))
+                    or _parse_date_text(time_tag.get_text(" ", strip=True))
+                    if time_tag
+                    else None
+                ),
+                language="en",
+            )
+        )
+    return items
+
+
+def _radware_mirror_items(soup: BeautifulSoup, _base_url: str) -> list[RssItem]:
+    """Parse Radware's listing through its read-only text mirror.
+
+    Radware challenges non-browser clients before serving both its listing and
+    RSS endpoint. The mirror preserves canonical Radware links and publication
+    dates, so the dashboard never stores mirror URLs as article destinations.
+    """
+    text = soup.get_text("\n")
+    items = []
+    for match in _RADWARE_MIRROR_ITEM_RE.finditer(text):
+        body = " ".join(match.group("body").replace("**", " ").split())
+        title = match.group("title").strip()
+        title_position = body.find(title)
+        summary = body[title_position + len(title) :].strip() if title_position >= 0 else body
+        items.append(
+            RssItem(
+                title=title,
+                link=match.group("link"),
+                summary=summary or None,
+                author="Radware",
+                published_at=_parse_date_text(match.group("date")),
+                language="en",
+            )
+        )
+    return items
+
+
+def _yahoo_tech_items(soup: BeautifulSoup, _base_url: str) -> list[RssItem]:
+    items = []
+    for script in soup.select("script"):
+        payload = (script.string or "").replace('\\"', '"')
+        for match in _YAHOO_STORY_RE.finditer(payload):
+            try:
+                title = json.loads(f'"{match.group("title")}"')
+            except json.JSONDecodeError:
+                title = match.group("title")
+            items.append(
+                RssItem(
+                    title=title.strip(),
+                    link=match.group("link"),
+                    summary=None,
+                    author="Yahoo Tech",
+                    published_at=_parse_datetime(match.group("date")),
+                    language="en",
+                )
+            )
+    return items
+
+
 _SITE_PARSERS = {
     "anthropic.com": _anthropic_items,
     "mintic.gov.co": _mintic_items,
     "ai.meta.com": _meta_items,
     "bogota.gov.co": _bogota_items,
     "news.microsoft.com": _microsoft_ai_items,
+    "afr.com": _afr_technology_items,
+    "r.jina.ai": _radware_mirror_items,
+    "tech.yahoo.com": _yahoo_tech_items,
 }
 
 

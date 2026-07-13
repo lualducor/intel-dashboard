@@ -18,6 +18,7 @@ def feed(
     category: str | None = None,
     source: str | None = None,
     min_score: float | None = None,
+    view: str | None = None,
     page: int = 1,
     db: Session = Depends(get_db),
 ):
@@ -25,12 +26,15 @@ def feed(
     active_queue = queue if queue in queues.QUEUES else "must_read"
     current_page = max(1, page)
     page_size = max(1, min(settings.feed_page_size, 200))
+    feed_view = "tech" if view == "tech" else None
+    source_slugs = queues.TECH_HARDWARE_SOURCE_SLUGS if feed_view else None
     result = queues.feed(
         db,
         settings,
         queue=active_queue,
         category=category,
         source=source,
+        source_slugs=source_slugs,
         min_score=min_score,
         limit=page_size + 1,
         offset=(current_page - 1) * page_size,
@@ -51,5 +55,6 @@ def feed(
             "category": category,
             "source": source,
             "min_score": min_score,
+            "feed_view": feed_view,
         },
     )

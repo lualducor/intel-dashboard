@@ -196,3 +196,50 @@ def test_colombia_topic_page(client):
     assert "Colombia Topic" in response.text
 
     assert api_client.get("/topics/unknown").status_code == 404
+
+
+def test_tech_dashboard_and_feed_exclude_unrelated_sources(client):
+    api_client, session = client
+    for index, slug in enumerate(("xda", "unrelated-ai")):
+        source = Source(
+            slug=slug,
+            name=slug,
+            url=f"https://{slug}.example",
+            kind="rss",
+            source_type="tech_media",
+            topic="ai",
+        )
+        session.add(source)
+        session.flush()
+        session.add(
+            Article(
+                source_id=source.id,
+                title=f"Scoped {slug}",
+                raw_title=f"Scoped {slug}",
+                normalized_title=f"scoped {slug}",
+                original_url=f"https://{slug}.example/story",
+                canonical_url=f"https://{slug}.example/story",
+                dedup_hash=f"route-scope-{index}",
+                content_hash=f"route-scope-content-{index}",
+                language="en",
+                country_scope="global",
+                topic="ai",
+                urgency="normal",
+                reading_time_minutes=1,
+                scraping_method="rss",
+                final_score=0.9,
+                status="new",
+            )
+        )
+    session.commit()
+
+    dashboard = api_client.get("/tech")
+    feed = api_client.get("/feed?queue=must_read&view=tech")
+
+    assert dashboard.status_code == feed.status_code == 200
+    assert "Triage Inbox · Tech &amp; Hardware" in dashboard.text
+    assert "Scoped xda" in dashboard.text
+    assert "Scoped unrelated-ai" not in dashboard.text
+    assert "Scoped xda" in feed.text
+    assert "Scoped unrelated-ai" not in feed.text
+    assert "view=tech" in dashboard.text

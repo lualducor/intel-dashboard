@@ -72,6 +72,31 @@ async def test_html_listing_extracts_json_ld_and_article_cards():
             "Microsoft expands its agent platform",
             (2026, 6, 2),
         ),
+        (
+            "https://www.afr.com/technology",
+            """<div data-testid="StoryTileBase"><h3><a href="/technology/new-chip-20260713-p60abc">
+            Australian lab unveils a faster AI chip</a></h3>
+            <p data-pb-type="ab">The processor targets efficient local inference.</p>
+            <span data-pb-type="au">Ada Engineer</span>
+            <time datetime="Jul 13, 2026 – 10.30am">Jul 13, 2026</time></div>""",
+            "Australian lab unveils a faster AI chip",
+            (2026, 7, 13),
+        ),
+        (
+            "https://r.jina.ai/https://www.radware.com/blog/",
+            """Markdown Content:
+            [![Image 3: Securing Autonomous AI Agents](https://www.radware.com/image.jpg)
+            Agentic AI Security Securing Autonomous AI Agents Practical controls for enterprise agents.
+            Radware **|**July 09, 2026](https://www.radware.com/blog/posts/securing-autonomous-ai-agents/)""",
+            "Securing Autonomous AI Agents",
+            (2026, 7, 9),
+        ),
+        (
+            "https://tech.yahoo.com/",
+            """<script>self.__next_f.push([1,"canonicalUrl":"https://tech.yahoo.com/computing/article/new-laptop-123.html","categoryLabel":"Computing","displayTime":"2026-07-13T12:30:00Z","headline":"A fast \\u0026 repairable laptop","provider":{}])</script>""",
+            "A fast & repairable laptop",
+            (2026, 7, 13),
+        ),
     ],
 )
 async def test_known_site_adapters(url, page, expected_title, expected_date):
@@ -101,3 +126,16 @@ async def test_microsoft_ai_adapter_filters_non_ai_cards():
 
     assert len(result) == 1
     assert result[0].title == "AI engineering that protects intelligence"
+
+
+async def test_afr_adapter_ignores_topic_navigation_links():
+    url = "https://www.afr.com/technology"
+    page = """<a href="/topic/artificial-intelligence-5ui">AI topic</a>
+    <div data-testid="StoryTileBase"><h3><a href="/technology/ai-policy-20260712-p60enz">
+    AI policy earns public scrutiny</a></h3><time datetime="Jul 12, 2026"></time></div>"""
+    with respx.mock:
+        respx.get(url).mock(return_value=httpx.Response(200, text=page))
+        result = await fetch_html_listing(url, user_agent="test", timeout=5)
+
+    assert len(result) == 1
+    assert result[0].link == "https://www.afr.com/technology/ai-policy-20260712-p60enz"

@@ -6,7 +6,7 @@
   <button
     type="button"
     class="btn"
-    hx-get="/feed?queue={{ active_queue }}&page={{ page + 1 }}{% if category %}&category={{ category|urlencode }}{% endif %}{% if source %}&source={{ source|urlencode }}{% endif %}{% if min_score is not none %}&min_score={{ min_score }}{% endif %}"
+    hx-get="/feed?queue={{ active_queue }}&page={{ page + 1 }}{% if category %}&category={{ category|urlencode }}{% endif %}{% if source %}&source={{ source|urlencode }}{% endif %}{% if min_score is not none %}&min_score={{ min_score }}{% endif %}{% if feed_view %}&view={{ feed_view|urlencode }}{% endif %}"
     hx-target="closest .load-more"
     hx-swap="outerHTML"
   >Load {{ page_size }} more</button>
