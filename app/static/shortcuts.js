@@ -180,22 +180,23 @@
     if (e.target.closest('[data-close-help]') || e.target.id === 'help-overlay') setHelp(false);
   });
 
-  document.addEventListener('htmx:afterSwap', function(e) {
+  document.addEventListener('htmx:afterSwap', function() {
     refreshCards();
+  });
 
-    const path = e.detail.requestConfig?.path || '';
-    const match = path.match(/^\/articles\/(\d+)\/(save|archive|useful|not_relevant|for_content|used_for_content)$/);
-    if (!match) return;
-
-    const [, articleId, action] = match;
+  document.addEventListener('articleActionCompleted', function(e) {
+    const articleId = String(e.detail.articleId);
+    const action = e.detail.action;
     const queue = activeQueue();
     const card = document.querySelector(`#queue .article-card[data-article-id="${articleId}"]`);
     showToast(actionLabel(action), 'success');
 
-    if (card && shouldRemoveFromQueue(queue, action)) {
+    if (!shouldRemoveFromQueue(queue, action)) return;
+
+    decrementActiveQueueCount();
+    if (card) {
       const removedIndex = cards.indexOf(card);
       card.classList.add('is-leaving');
-      decrementActiveQueueCount();
       window.setTimeout(() => {
         card.remove();
         refreshCards();
@@ -204,6 +205,8 @@
           updateFocus(false);
         }
       }, 220);
+    } else {
+      refreshCards();
     }
   });
 

@@ -1,3 +1,4 @@
+import json
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
@@ -60,11 +61,20 @@ def act(
     db.commit()
     db.refresh(article)
 
-    return templates.TemplateResponse(
+    response = templates.TemplateResponse(
         request,
         "_article_card.html",
         {"request": request, "a": article, "settings": get_settings()},
     )
+    response.headers["HX-Trigger-After-Swap"] = json.dumps(
+        {
+            "articleActionCompleted": {
+                "articleId": article.id,
+                "action": action,
+            }
+        }
+    )
+    return response
 
 
 @router.post("/bulk/articles/archive-old")

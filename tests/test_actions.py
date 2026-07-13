@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
@@ -78,6 +80,9 @@ def test_useful_sets_saved_and_records_action(client):
     response = api_client.post(f"/articles/{article.id}/useful")
 
     assert response.status_code == 200
+    assert json.loads(response.headers["HX-Trigger-After-Swap"])[
+        "articleActionCompleted"
+    ] == {"articleId": article.id, "action": "useful"}
     session.refresh(article)
     assert article.status == "saved"
     action = session.scalar(

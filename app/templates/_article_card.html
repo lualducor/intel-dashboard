@@ -51,8 +51,8 @@
       <button type="button" title="Create content idea" hx-post="/articles/{{ a.id }}/for_content" hx-target="closest .article-card" hx-swap="outerHTML">Content idea</button>
     </div>
     <div class="article-dismiss-actions">
-      <button type="button" title="Archive · A" hx-post="/articles/{{ a.id }}/archive" hx-target="closest .article-card" hx-swap="outerHTML">Archive</button>
-      <button type="button" title="Not relevant · N" hx-post="/articles/{{ a.id }}/not_relevant" hx-target="closest .article-card" hx-swap="outerHTML">Not relevant</button>
+      <button type="button" title="Archive · A" hx-post="/articles/{{ a.id }}/archive" hx-target="closest .article-card" hx-swap="delete" hx-disabled-elt="this">Archive</button>
+      <button type="button" title="Not relevant · N" hx-post="/articles/{{ a.id }}/not_relevant" hx-target="closest .article-card" hx-swap="delete" hx-disabled-elt="this">Not relevant</button>
     </div>
   </div>
 
