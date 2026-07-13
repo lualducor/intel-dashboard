@@ -12,24 +12,33 @@
   <script src="/static/shortcuts.js" defer></script>
 </head>
 <body>
+  {% set current_path = request.url.path if request is defined else '' %}
   <header class="top-bar">
     <a class="brand" href="/">
       <span class="status-dot" aria-hidden="true"></span>
-      INTEL
-      <span class="brand-sub">intelligence triage</span>
+      <span class="brand-name">INTEL</span>
+      <span class="brand-sub">signal desk</span>
     </a>
     <nav class="global-nav" aria-label="Primary navigation">
-      <a href="/">AI</a>
-      <a href="/tech">Tech &amp; Hardware</a>
-      <a href="/topics/colombia">Colombia</a>
-      <a href="/topics/crypto">Crypto</a>
-      <a href="/saved">Saved</a>
-      <a href="/search">Search</a>
-      <a href="/content">Content</a>
-      <a href="/sources">Sources</a>
-      <a href="/sources/health">Health</a>
+      <span class="nav-group">
+        <a href="/"{% if current_path == '/' %} class="active" aria-current="page"{% endif %}>AI</a>
+        <a href="/tech"{% if current_path == '/tech' %} class="active" aria-current="page"{% endif %}>Tech</a>
+        <a href="/topics/colombia"{% if current_path == '/topics/colombia' %} class="active" aria-current="page"{% endif %}>Colombia</a>
+        <a href="/topics/crypto"{% if current_path == '/topics/crypto' %} class="active" aria-current="page"{% endif %}>Crypto</a>
+      </span>
+      <span class="nav-group nav-workspace">
+        <a href="/saved"{% if current_path in ['/saved', '/archive'] %} class="active" aria-current="page"{% endif %}>Saved</a>
+        <a href="/content"{% if current_path == '/content' %} class="active" aria-current="page"{% endif %}>Content</a>
+        <a href="/search"{% if current_path == '/search' %} class="active" aria-current="page"{% endif %}>Search</a>
+      </span>
+      <span class="nav-group nav-operations">
+        <a href="/sources"{% if current_path == '/sources' %} class="active" aria-current="page"{% endif %}>Sources</a>
+        <a href="/sources/health"{% if current_path == '/sources/health' %} class="active" aria-current="page"{% endif %}>Health</a>
+      </span>
     </nav>
     <div class="top-bar-actions">
+      <a class="clip-link" href="/clip"{% if current_path == '/clip' %} aria-current="page"{% endif %}>+ Clip</a>
+      <button type="button" class="help-trigger" data-open-help aria-label="Show keyboard shortcuts" title="Keyboard shortcuts">?</button>
       <button
         type="button"
         class="refresh-all"
@@ -37,7 +46,9 @@
         hx-swap="none"
         hx-on::after-request="if(event.detail.successful) window.location.reload()"
       >
-        ↻ Refresh All
+        <span class="refresh-icon" aria-hidden="true">↻</span>
+        <span class="refresh-label">Sync</span>
+        <span class="refreshing-label">Syncing</span>
       </button>
     </div>
   </header>

@@ -55,3 +55,24 @@ def test_generate_briefing_creates_ordered_must_read_briefing(db_factory):
     assert "Highest Scoring AI Story" in generated.body_markdown
     assert json.loads(generated.article_ids_json) == [high.id, qualifying.id]
     assert briefing.get_latest_briefing(db).id == generated.id
+    assert briefing.article_groups(db, generated)["ai"] == [high, qualifying]
+
+
+def test_article_groups_handles_missing_or_invalid_briefing_data(db_factory):
+    db = db_factory()
+
+    assert briefing.article_groups(db, None) == {"ai": [], "colombia": [], "crypto": []}
+
+    invalid = Briefing(
+        body_markdown="invalid",
+        article_ids_json="not-json",
+        score_version="test",
+    )
+    db.add(invalid)
+    db.commit()
+
+    assert briefing.article_groups(db, invalid) == {
+        "ai": [],
+        "colombia": [],
+        "crypto": [],
+    }

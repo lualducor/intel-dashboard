@@ -1,55 +1,64 @@
 <article class="article-card" data-article-id="{{ a.id }}" tabindex="-1">
-  <div class="article-card-header">
-    {% set tier = "high" if a.final_score >= 0.70 else ("mid" if a.final_score >= 0.40 else "low") %}
-    <span class="score-badge score-{{ tier }}" title="Relevance score">{{ a.final_score|round(2) }}</span>
-    <h3>
-      <a
-        href="{{ paywall_url(a) }}"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {{ a.title }}
-      </a>
-      {% if a.paywalled %}<span class="paywall-marker" aria-label="Paywalled">🔒</span>{% endif %}
-    </h3>
+  {% set tier = "high" if a.final_score >= 0.70 else ("mid" if a.final_score >= 0.40 else "low") %}
+  {% set published = a.published_at|to_bogota_local %}
+  <div class="article-card-topline">
+    <p class="article-kicker">
+      <span class="article-source">{{ a.source.name if a.source else "Unknown source" }}</span>
+      {% if a.category %}<span>{{ a.category|replace('_', ' ') }}</span>{% endif %}
+      {% if published %}<time datetime="{{ published.isoformat() }}">{{ published.strftime("%b %d · %H:%M") }}</time>{% endif %}
+    </p>
+    <span class="score-badge score-{{ tier }}" title="Relevance score: {{ a.final_score|round(2) }}">
+      <span>Score</span> {{ a.final_score|round(2) }}
+    </span>
   </div>
 
-  {% set published = a.published_at|to_bogota_local %}
+  <h3>
+    <a href="{{ paywall_url(a) }}" target="_blank" rel="noopener noreferrer">
+      {{ a.title }} <span class="external-arrow" aria-hidden="true">↗</span>
+    </a>
+    {% if a.paywalled %}<span class="paywall-marker" aria-label="Paywalled">Subscriber</span>{% endif %}
+  </h3>
+
   <p class="article-meta">
-    <span>{{ a.source.name if a.source else "Unknown" }}</span>
-    <span>{{ a.category or "uncategorized" }}</span>
-    <span class="urgency-{{ a.urgency }}">{{ a.urgency }}</span>
-    <span>{{ a.reading_time_minutes }} min</span>
-    <span>{{ published.strftime("%Y-%m-%d %H:%M") if published else "No date" }}</span>
-    {% if a.cluster and a.cluster.source_count > 1 %}<span>{{ a.cluster.source_count }} sources</span>{% endif %}
+    <span>{{ a.reading_time_minutes }} min read</span>
+    {% if a.urgency == 'breaking' %}<span class="urgency-breaking">Breaking</span>{% endif %}
+    {% if a.cluster and a.cluster.source_count > 1 %}<span>{{ a.cluster.source_count }} sources on this story</span>{% endif %}
+    {% if a.status != 'new' %}<span class="article-status">{{ a.status|replace('_', ' ') }}</span>{% endif %}
   </p>
+
+  {% if a.summary %}
+  <p class="article-summary">{{ a.summary|striptags|truncate(280) }}</p>
+  {% endif %}
 
   {% if a.tags %}
   <div class="tag-list" aria-label="Tags">
-    {% for tag in a.tags %}
-    <span class="tag-chip">{{ tag.name }}</span>
-    {% endfor %}
+    {% for tag in a.tags[:4] %}<span class="tag-chip">{{ tag.name }}</span>{% endfor %}
+    {% if a.tags|length > 4 %}<span class="tag-chip tag-more">+{{ a.tags|length - 4 }}</span>{% endif %}
   </div>
   {% endif %}
 
   {% if a.score_explanation %}
-  <p class="score-explanation"><small>{{ a.score_explanation }}</small></p>
-  {% endif %}
-
-  {% if a.summary %}
-  <p class="article-summary">{{ a.summary|striptags|truncate(320) }}</p>
+  <details class="score-reason">
+    <summary>Why this ranked here</summary>
+    <p>{{ a.score_explanation }}</p>
+  </details>
   {% endif %}
 
   <div class="article-actions">
-    <button type="button" hx-post="/articles/{{ a.id }}/save" hx-target="closest .article-card" hx-swap="outerHTML">Save</button>
-    <button type="button" hx-post="/articles/{{ a.id }}/archive" hx-target="closest .article-card" hx-swap="outerHTML">Archive</button>
-    <button type="button" hx-post="/articles/{{ a.id }}/useful" hx-target="closest .article-card" hx-swap="outerHTML">Useful</button>
-    <button type="button" hx-post="/articles/{{ a.id }}/not_relevant" hx-target="closest .article-card" hx-swap="outerHTML">Not relevant</button>
-    <button type="button" hx-post="/articles/{{ a.id }}/for_content" hx-target="closest .article-card" hx-swap="outerHTML">For content</button>
+    <div class="article-primary-actions">
+      <button type="button" class="action-save" title="Save · S" hx-post="/articles/{{ a.id }}/save" hx-target="closest .article-card" hx-swap="outerHTML"><span aria-hidden="true">＋</span> Save</button>
+      <button type="button" title="Mark useful · U" hx-post="/articles/{{ a.id }}/useful" hx-target="closest .article-card" hx-swap="outerHTML">Useful</button>
+      <button type="button" title="Create content idea" hx-post="/articles/{{ a.id }}/for_content" hx-target="closest .article-card" hx-swap="outerHTML">Content idea</button>
+    </div>
+    <div class="article-dismiss-actions">
+      <button type="button" title="Archive · A" hx-post="/articles/{{ a.id }}/archive" hx-target="closest .article-card" hx-swap="outerHTML">Archive</button>
+      <button type="button" title="Not relevant · N" hx-post="/articles/{{ a.id }}/not_relevant" hx-target="closest .article-card" hx-swap="outerHTML">Not relevant</button>
+    </div>
   </div>
 
+  <div class="article-secondary-tools">
   <details>
-    <summary>For content</summary>
+    <summary>Build a content brief</summary>
     <form class="for-content-form" hx-post="/articles/{{ a.id }}/used_for_content" hx-target="closest .article-card" hx-swap="outerHTML">
       <label>
         Use type
@@ -80,7 +89,7 @@
   </details>
 
   <details>
-    <summary>Notes</summary>
+    <summary>Add a note</summary>
     <form hx-post="/articles/{{ a.id }}/notes" hx-target="closest .article-card" hx-swap="outerHTML">
       <label>
         Note
@@ -89,4 +98,5 @@
       <button type="submit">Add note</button>
     </form>
   </details>
+  </div>
 </article>

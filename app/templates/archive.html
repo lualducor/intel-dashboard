@@ -4,7 +4,16 @@
 
 {% block content %}
 <main>
-  <h1>Archive</h1>
+  <header class="page-header">
+    <p class="eyebrow">Personal library</p>
+    <div class="page-title-row">
+      <div>
+        <h1>Archive</h1>
+        <p>Dismissed stories kept out of the active decision queue.</p>
+      </div>
+      <a class="btn" href="/saved">Back to saved</a>
+    </div>
+  </header>
 
   {% if not articles %}
   <p class="empty-state">No archived articles yet.</p>

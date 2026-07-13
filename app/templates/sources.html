@@ -4,7 +4,16 @@
 
 {% block content %}
   <main class="page">
-    <h1>Sources</h1>
+    <header class="page-header">
+      <p class="eyebrow">Signal operations</p>
+      <div class="page-title-row">
+        <div>
+          <h1>Sources</h1>
+          <p>Control trust, cadence, and ingestion limits for every publisher.</p>
+        </div>
+        <a class="btn" href="/sources/health">Open health monitor</a>
+      </div>
+    </header>
     <details class="source-add-panel">
       <summary>Add source</summary>
       <form class="source-add-form" hx-post="/sources/create" hx-target="#sources-body" hx-swap="beforeend">

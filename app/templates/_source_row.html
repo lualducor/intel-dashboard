@@ -4,6 +4,7 @@
   <td>
     <button
       type="button"
+      class="source-toggle{% if source.active %} is-on{% endif %}"
       hx-post="/sources/{{ source.slug }}/toggle"
       hx-target="#source-{{ source.slug }}"
       hx-swap="outerHTML"
@@ -62,12 +63,14 @@
   <td>
     <button
       type="button"
+      class="table-action"
       hx-post="/sources/{{ source.slug }}/reset"
       hx-target="#source-{{ source.slug }}"
       hx-swap="outerHTML"
     >Reset</button>
     <button
       type="button"
+      class="table-action"
       hx-post="/ingest/test/{{ source.slug }}"
       hx-target="#source-test-{{ source.slug }}"
       hx-swap="innerHTML"

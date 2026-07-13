@@ -14,4 +14,8 @@ router = APIRouter()
 @router.post("/briefing/regenerate")
 def regenerate(request: Request, db: Session = Depends(get_db)):
     b = briefing.generate_briefing(db, get_settings())
-    return templates.TemplateResponse(request, "_briefing.html", {"briefing": b})
+    return templates.TemplateResponse(
+        request,
+        "_briefing.html",
+        {"briefing": b, "briefing_groups": briefing.article_groups(db, b)},
+    )

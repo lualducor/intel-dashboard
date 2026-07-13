@@ -4,29 +4,45 @@
 
 {% block content %}
 <main class="dashboard-shell">
-  <div class="operations-strip">
-    <span>{{ source_stats.active }} active sources</span>
-    <span>{{ source_stats.failing }} reporting failures</span>
-    {% set refreshed = source_stats.last_refresh|to_bogota_local %}
-    <span>Last refresh: {{ refreshed.strftime('%Y-%m-%d %H:%M') if refreshed else 'Never' }}</span>
-    <a href="/sources/health">Source health</a>
-  </div>
+  <section class="dashboard-intro" aria-labelledby="dashboard-title">
+    <div>
+      <p class="eyebrow">Personal intelligence desk</p>
+      <h1 id="dashboard-title">{% if tech_only %}Tech &amp; hardware radar{% else %}AI signal radar{% endif %}</h1>
+      <p class="dashboard-subtitle">{% if tech_only %}Focused reporting on devices, infrastructure, and the tools shaping the stack.{% else %}Ranked reporting from trusted sources, ready for fast decisions.{% endif %}</p>
+    </div>
+    <div class="operations-strip" aria-label="Source status">
+      <span class="ops-chip"><strong>{{ source_stats.active }}</strong> sources online</span>
+      <a class="ops-chip{% if source_stats.failing %} is-warning{% endif %}" href="/sources/health">
+        <strong>{{ source_stats.failing }}</strong> {% if source_stats.failing == 1 %}source issue{% else %}source issues{% endif %}
+      </a>
+      {% set refreshed = source_stats.last_refresh|to_bogota_local %}
+      <span class="ops-chip ops-time">Updated {{ refreshed.strftime('%b %d · %H:%M') if refreshed else 'never' }}</span>
+    </div>
+  </section>
   {% if not tech_only %}{% include "_briefing.html" %}{% endif %}
 
   <div class="dashboard-grid{% if tech_only %} tech-only{% endif %}">
     <section class="triage-inbox" aria-labelledby="triage-title">
-      <h2 id="triage-title">Triage Inbox · {% if tech_only %}Tech &amp; Hardware{% else %}AI{% endif %}</h2>
-      <form class="bulk-toolbar" hx-post="/bulk/articles/archive-old" hx-confirm="Archive untouched inbox items older than this age?">
-        <label for="archive-days">Inbox cleanup</label>
-        <select id="archive-days" name="days">
-          <option value="30">Older than 30 days</option>
-          <option value="60">Older than 60 days</option>
-          <option value="90">Older than 90 days</option>
-        </select>
-        <button type="submit" class="btn">Archive old</button>
-      </form>
+      <div class="triage-heading">
+        <div>
+          <p class="eyebrow">Decision queue</p>
+          <h2 id="triage-title">Triage inbox</h2>
+        </div>
+        <details class="inbox-tools">
+          <summary>Inbox tools</summary>
+          <form class="bulk-toolbar" hx-post="/bulk/articles/archive-old" hx-confirm="Archive untouched inbox items older than this age?">
+            <label for="archive-days">Archive untouched stories</label>
+            <select id="archive-days" name="days">
+              <option value="30">Older than 30 days</option>
+              <option value="60">Older than 60 days</option>
+              <option value="90">Older than 90 days</option>
+            </select>
+            <button type="submit" class="btn btn-danger-subtle">Archive</button>
+          </form>
+        </details>
+      </div>
       {% include "_queue_tabs.html" %}
-      <div id="queue">
+      <div id="queue" aria-live="polite">
         {% include "_card_list.html" %}
       </div>
     </section>

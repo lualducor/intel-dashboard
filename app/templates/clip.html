@@ -3,15 +3,16 @@
 {% block title %}Clip — INTEL{% endblock %}
 
 {% block content %}
-<main class="clip-container" style="max-width: 600px; margin: 2rem auto; padding: 0 1rem;">
-  <h1>Clip Article</h1>
-  <p class="helper-text" style="color: #666; margin-bottom: 2rem;">
-    Enter a URL to manually add an article to your dashboard. It will be downloaded, extracted, scored, and saved automatically.
-  </p>
+<main class="clip-container">
+  <header class="page-header">
+    <p class="eyebrow">Manual capture</p>
+    <h1>Clip an article</h1>
+    <p>Paste a URL and INTEL will extract, score, and save it to your local library.</p>
+  </header>
 
   <form method="POST" action="/clip" class="clip-form">
-    <div class="field" style="margin-bottom: 1.5rem;">
-      <label for="url" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Article URL</label>
+    <div class="field">
+      <label for="url">Article URL</label>
       <input
         type="url"
         name="url"
@@ -19,16 +20,14 @@
         required
         placeholder="https://..."
         autofocus
-        style="width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px;"
       >
     </div>
 
-    <div class="field" style="margin-bottom: 1.5rem;">
-      <label for="use_type" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Use Type (Optional)</label>
+    <div class="field">
+      <label for="use_type">Use type <span>Optional</span></label>
       <select
         name="use_type"
         id="use_type"
-        style="width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px;"
       >
         <option value=""></option>
         <option value="twitch">Twitch</option>
@@ -41,24 +40,17 @@
       </select>
     </div>
 
-    <div class="field" style="margin-bottom: 1.5rem;">
-      <label for="content_angle" style="display: block; font-weight: bold; margin-bottom: 0.5rem;">Content Angle (Optional)</label>
+    <div class="field">
+      <label for="content_angle">Content angle <span>Optional</span></label>
       <textarea
         name="content_angle"
         id="content_angle"
         rows="3"
         placeholder="Why are you clipping this? What's the angle?"
-        style="width: 100%; padding: 0.75rem; border: 1px solid #ccc; border-radius: 4px; font-family: inherit;"
       ></textarea>
     </div>
 
-    <button
-      type="submit"
-      class="btn-primary"
-      style="background: #007bff; color: white; border: none; padding: 0.75rem 1.5rem; border-radius: 4px; cursor: pointer; font-weight: bold;"
-    >
-      Clip
-    </button>
+    <button type="submit" class="btn-primary">Clip and score</button>
   </form>
 </main>
 {% endblock %}

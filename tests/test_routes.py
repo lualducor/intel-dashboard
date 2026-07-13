@@ -237,7 +237,7 @@ def test_tech_dashboard_and_feed_exclude_unrelated_sources(client):
     feed = api_client.get("/feed?queue=must_read&view=tech")
 
     assert dashboard.status_code == feed.status_code == 200
-    assert "Triage Inbox · Tech &amp; Hardware" in dashboard.text
+    assert "Tech &amp; hardware radar" in dashboard.text
     assert "Scoped xda" in dashboard.text
     assert "Scoped unrelated-ai" not in dashboard.text
     assert "Scoped xda" in feed.text

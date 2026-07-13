@@ -1,19 +1,37 @@
 <section id="briefing" class="daily-briefing" aria-labelledby="daily-briefing-title">
   <div class="section-heading">
-    <h1 id="daily-briefing-title">Daily Briefing</h1>
+    <div>
+      <p class="eyebrow">Morning readout</p>
+      <h2 id="daily-briefing-title">Today’s top signals</h2>
+      {% if briefing %}
+      {% set generated = briefing.generated_at|to_bogota_local %}
+      <p class="briefing-meta">Generated {{ generated.strftime('%b %d · %H:%M') if generated else 'recently' }} · Bogotá time</p>
+      {% endif %}
+    </div>
     <button
       type="button"
-      class="btn"
+      class="btn briefing-refresh"
       hx-post="/briefing/regenerate"
       hx-target="#briefing"
       hx-swap="outerHTML"
     >
-      Regenerate
+      <span aria-hidden="true">↻</span> Regenerate
     </button>
   </div>
-  {% if briefing %}
-  <div class="briefing-body"><pre>{{ briefing.body_markdown }}</pre></div>
+  {% if briefing and briefing_groups and briefing_groups.ai %}
+  <div class="briefing-stories">
+    {% for a in briefing_groups.ai[:3] %}
+    <a class="briefing-story" href="{{ paywall_url(a) }}" target="_blank" rel="noopener noreferrer">
+      <span class="briefing-rank">0{{ loop.index }}</span>
+      <span class="briefing-story-copy">
+        <strong>{{ a.title }}</strong>
+        <span>{{ a.source.name if a.source else 'Unknown source' }} · score {{ a.final_score|round(2) }}</span>
+      </span>
+      <span class="external-arrow" aria-hidden="true">↗</span>
+    </a>
+    {% endfor %}
+  </div>
   {% else %}
-  <p class="empty-state">No briefing yet — click Regenerate.</p>
+  <p class="empty-state">No fresh must-read signals yet. Regenerate after the next source sync.</p>
   {% endif %}
 </section>

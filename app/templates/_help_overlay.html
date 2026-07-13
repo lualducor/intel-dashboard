@@ -1,6 +1,12 @@
-<div id="help-overlay">
+<div id="help-overlay" role="dialog" aria-modal="true" aria-labelledby="help-title" aria-hidden="true">
   <div class="help-modal">
-    <h2>Keyboard Shortcuts</h2>
+    <div class="help-heading">
+      <div>
+        <p class="eyebrow">Move at keyboard speed</p>
+        <h2 id="help-title">Keyboard shortcuts</h2>
+      </div>
+      <button type="button" class="help-close" data-close-help aria-label="Close keyboard shortcuts">×</button>
+    </div>
     <table class="help-table">
       <tbody>
         <tr><td><kbd>j</kbd> / <kbd>k</kbd></td><td>Next / Previous article</td></tr>

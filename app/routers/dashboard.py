@@ -71,6 +71,7 @@ def _dashboard_response(
         or 0,
         "last_refresh": db.scalar(last_refresh),
     }
+    latest_briefing = None if tech_only else briefing.get_latest_briefing(db)
 
     return templates.TemplateResponse(
         request,
@@ -87,7 +88,8 @@ def _dashboard_response(
             "colombia": [] if tech_only else queues.side_panel_colombia(db),
             "crypto": [] if tech_only else queues.side_panel_crypto(db),
             "horoscope": None if tech_only else queues.horoscope_today(db),
-            "briefing": None if tech_only else briefing.get_latest_briefing(db),
+            "briefing": latest_briefing,
+            "briefing_groups": briefing.article_groups(db, latest_briefing),
             "source_stats": source_stats,
             "tech_only": tech_only,
             "feed_view": "tech" if tech_only else None,

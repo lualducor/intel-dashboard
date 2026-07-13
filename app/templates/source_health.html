@@ -3,8 +3,17 @@
 {% block title %}Source Health — INTEL{% endblock %}
 
 {% block content %}
-<main class="triage-inbox">
-  <h1>Source Health</h1>
+<main class="page source-health-page">
+  <header class="page-header">
+    <p class="eyebrow">Signal operations</p>
+    <div class="page-title-row">
+      <div>
+        <h1>Source health</h1>
+        <p>See failures, ingestion volume, and the last successful response at a glance.</p>
+      </div>
+      <a class="btn" href="/sources">Manage sources</a>
+    </div>
+  </header>
   <table class="source-health-table">
     <thead>
       <tr>

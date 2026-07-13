@@ -4,7 +4,16 @@
 
 {% block content %}
 <main>
-  <h1>Saved</h1>
+  <header class="page-header">
+    <p class="eyebrow">Personal library</p>
+    <div class="page-title-row">
+      <div>
+        <h1>Saved signals</h1>
+        <p>Everything worth returning to, organized by intent.</p>
+      </div>
+      <a class="btn" href="/archive">View archive</a>
+    </div>
+  </header>
 
   <nav class="filter-bar" aria-label="Saved filters">
     {% for f in filters %}

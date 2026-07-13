@@ -4,6 +4,11 @@
 
 {% block content %}
 <main class="search-container">
+  <header class="page-header centered">
+    <p class="eyebrow">Your intelligence archive</p>
+    <h1>Find a signal</h1>
+    <p>Search across article titles, summaries, and your notes.</p>
+  </header>
   <form method="GET" action="/search" class="search-form">
     <input type="search" name="q" id="search-box" value="{{ q }}" placeholder="Search articles and notes..." autofocus>
     <button type="submit">Search</button>
@@ -22,7 +27,7 @@
         <p class="empty-state">No matches for '{{ q }}'.</p>
       {% endif %}
     {% else %}
-      <p class="hint">Type a query to search.</p>
+      <p class="empty-state">Start with a company, topic, person, or phrase.</p>
     {% endif %}
   </div>
 </main>

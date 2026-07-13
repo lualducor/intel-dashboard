@@ -95,3 +95,30 @@ def get_latest_briefing(db: Session) -> Briefing | None:
     return db.scalars(
         select(Briefing).order_by(Briefing.generated_at.desc()).limit(1)
     ).first()
+
+
+def article_groups(db: Session, item: Briefing | None) -> dict[str, list[Article]]:
+    """Hydrate a briefing's ordered article ids for the dashboard UI.
+
+    ``body_markdown`` remains the portable/exportable briefing format.  The UI
+    uses the source articles so titles, publishers, scores, and links can be
+    presented as real interface elements instead of a block of raw Markdown.
+    """
+    groups: dict[str, list[Article]] = {"ai": [], "colombia": [], "crypto": []}
+    if item is None:
+        return groups
+
+    try:
+        article_ids = [int(value) for value in json.loads(item.article_ids_json)]
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return groups
+    if not article_ids:
+        return groups
+
+    articles = list(db.scalars(select(Article).where(Article.id.in_(article_ids))))
+    articles_by_id = {article.id: article for article in articles}
+    for article_id in article_ids:
+        article = articles_by_id.get(article_id)
+        if article is not None and article.topic in groups:
+            groups[article.topic].append(article)
+    return groups
