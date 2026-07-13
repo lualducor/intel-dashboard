@@ -89,7 +89,10 @@ def clip_url(
 
     ntitle = normalizer.normalized_title(title)
     tags_names, category = tagger.tag_article(title, summary, interests, topic="ai")
-    matched_weights = [w for _, w in tagger.match_buckets(title, summary, interests)]
+    matched_weights = [
+        w
+        for _, w in tagger.match_buckets(title, summary, interests, topic="ai")
+    ]
     tag_objs = _get_or_create_tags(db, tags_names)
 
     recent_titles = list(

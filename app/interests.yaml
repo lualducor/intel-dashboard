@@ -35,7 +35,8 @@ keywords:
     terms: [regulation, law, eu ai act, white house, executive order, regulación, ley, decreto, proyecto de ley]
   colombia-tech:
     weight: 0.9
-    terms: [colombia, bogotá, bogota, medellín, medellin, mintic, ministerio tic, tecnología colombia, innovación digital, transformación digital]
+    topics: [colombia]
+    terms: [mintic, ministerio tic, tecnología, tech, software, startup, startups, inteligencia artificial, ciberseguridad, telecomunicaciones, fintech, govtech, computación, robótica, semiconductores, innovación digital, transformación digital, gobierno digital]
 
 # Category priority. Final value contributes via the 0.10 category weight in final_score.
 categories_priority:
@@ -48,6 +49,7 @@ categories_priority:
   developer_tooling: 0.75
   product_launch: 0.60
   regulation: 0.40
+  colombia_tech: 0.65
   general: 0.30
   horoscope: 0.30
 
@@ -65,4 +67,4 @@ bucket_to_category:
   ai-infrastructure: ai_infrastructure
   product-launch: product_launch
   regulation: regulation
-  colombia-tech: general
+  colombia-tech: colombia_tech

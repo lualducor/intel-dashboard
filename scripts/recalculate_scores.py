@@ -103,8 +103,12 @@ def recalculate(
             tags_names, category = tagger.tag_article(
                 a.title, a.summary, interests, topic=a.topic
             )
+            tag_objs = _get_or_create_tags(db, tags_names)
             matched_weights = [
-                w for _, w in tagger.match_buckets(a.title, a.summary, interests)
+                w
+                for _, w in tagger.match_buckets(
+                    a.title, a.summary, interests, topic=a.topic
+                )
             ]
             published_at = _aware_utc(a.published_at)
             hours_since = (
@@ -116,7 +120,7 @@ def recalculate(
             cat = scorer.category_score(category, interests.categories_priority)
             fb = user_feedback_score(
                 source_id=a.source_id,
-                tag_ids=[t.id for t in a.tags],
+                tag_ids=[t.id for t in tag_objs],
                 category=category,
                 maps=maps,
                 cold_floor=settings.feedback_cold_floor,
@@ -145,7 +149,7 @@ def recalculate(
                 a.category = category
                 a.score_explanation = explanation
                 a.last_scored_at = now
-                a.tags = _get_or_create_tags(db, tags_names)
+                a.tags = tag_objs
                 db.add(
                     ScoreRun(
                         article_id=a.id,
@@ -194,8 +198,16 @@ def rescore_article_by_id(
             )
         )
     )
-    tags_names, category = tagger.tag_article(a.title, a.summary, interests, topic=a.topic)
-    matched_weights = [w for _, w in tagger.match_buckets(a.title, a.summary, interests)]
+    tags_names, category = tagger.tag_article(
+        a.title, a.summary, interests, topic=a.topic
+    )
+    tag_objs = _get_or_create_tags(db, tags_names)
+    matched_weights = [
+        w
+        for _, w in tagger.match_buckets(
+            a.title, a.summary, interests, topic=a.topic
+        )
+    ]
     published_at = _aware_utc(a.published_at)
     hours_since = (
         (now - published_at).total_seconds() / 3600.0 if published_at else None
@@ -206,7 +218,7 @@ def rescore_article_by_id(
     cat = scorer.category_score(category, interests.categories_priority)
     fb = user_feedback_score(
         source_id=a.source_id,
-        tag_ids=[t.id for t in a.tags],
+        tag_ids=[t.id for t in tag_objs],
         category=category,
         maps=maps,
         cold_floor=settings.feedback_cold_floor,
@@ -227,7 +239,7 @@ def rescore_article_by_id(
     a.category = category
     a.score_explanation = explanation
     a.last_scored_at = now
-    a.tags = _get_or_create_tags(db, tags_names)
+    a.tags = tag_objs
     db.add(
         ScoreRun(
             article_id=a.id,

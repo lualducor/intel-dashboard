@@ -262,7 +262,9 @@ async def _ingest_source(
             )
             matched_weights = [
                 weight
-                for _, weight in tagger.match_buckets(item.title, summary, interests)
+                for _, weight in tagger.match_buckets(
+                    item.title, summary, interests, topic=source.topic
+                )
             ]
             tag_objs = _get_or_create_tags(db, tags_names)
 
