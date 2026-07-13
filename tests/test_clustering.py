@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from app.models import Article, Source
 from app.services.clustering import assign_story_cluster
@@ -37,12 +37,15 @@ def test_assign_story_cluster_groups_similar_cross_source_titles(db_factory):
     )
     db.add_all([first_source, second_source])
     db.flush()
+    now = datetime.now(timezone.utc)
     first = _article(first_source.id, "one", "OpenAI launches a new agent platform")
+    first.fetched_at = (now - timedelta(hours=1)).replace(tzinfo=None)
     second = _article(second_source.id, "two", "OpenAI launches new agent platform")
+    second.fetched_at = now
     db.add_all([first, second])
     db.flush()
 
-    cluster = assign_story_cluster(db, second, now=datetime.now(timezone.utc))
+    cluster = assign_story_cluster(db, second, now=now)
 
     assert cluster is not None
     assert first.cluster_id == second.cluster_id == cluster.id

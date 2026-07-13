@@ -7,13 +7,28 @@
 - slug: anthropic-news
   name: Anthropic News
   url: https://www.anthropic.com/news
-  feed_url: https://www.anthropic.com/news/rss.xml   # [verify] 2026-05-28: 404, no public RSS found
-  active: false  # 2026-05-28 verify_feeds: 404; needs a working feed URL
-  kind: rss
+  feed_url: https://www.anthropic.com/news
+  active: true
+  kind: html
   source_type: official_blog
   topic: ai
   trust_score: 0.95
   source_priority: 0.9
+  max_items_per_fetch: 20
+  max_item_age_days: 90
+  default_language: en
+  default_country_scope: global
+
+- slug: meta-ai-blog
+  name: Meta AI Blog
+  url: https://ai.meta.com/blog/
+  feed_url: https://ai.meta.com/blog/
+  active: true
+  kind: html
+  source_type: official_blog
+  topic: ai
+  trust_score: 0.9
+  source_priority: 0.8
   max_items_per_fetch: 20
   max_item_age_days: 90
   default_language: en
@@ -162,6 +177,21 @@
   max_item_age_days: 30
   default_language: en
 
+- slug: microsoft-ai
+  name: Microsoft AI
+  url: https://news.microsoft.com/source/topics/ai/
+  feed_url: https://news.microsoft.com/source/topics/ai/
+  active: true
+  kind: html
+  source_type: official_blog
+  topic: ai
+  trust_score: 0.85
+  source_priority: 0.75
+  max_items_per_fetch: 20
+  max_item_age_days: 60
+  default_language: en
+  default_country_scope: global
+
 # === Colombia / Bogotá ===
 - slug: eltiempo-bogota
   name: El Tiempo — Bogotá
@@ -224,14 +254,29 @@
 - slug: mintic
   name: MinTIC Noticias
   url: https://www.mintic.gov.co/portal/inicio/Sala-de-prensa/Noticias/
-  feed_url: https://www.mintic.gov.co/portal/inicio/Sala-de-prensa/Noticias/rss.xml  # [verify] 2026-05-28: 404
-  active: false  # 2026-05-28 verify_feeds: 404; needs a working feed URL
-  kind: rss
+  feed_url: https://www.mintic.gov.co/portal/inicio/Sala-de-prensa/Noticias/
+  active: true
+  kind: html
   source_type: government
   topic: colombia
   trust_score: 0.75
   source_priority: 0.6
   max_items_per_fetch: 20
+  max_item_age_days: 30
+  default_language: es
+  default_country_scope: co
+
+- slug: bogota-tecnologia
+  name: Bogotá Tecnología
+  url: https://bogota.gov.co/
+  feed_url: "https://bogota.gov.co/busqueda?search_api_fulltext=tecnologia&Buscar=Buscar"
+  active: true
+  kind: html
+  source_type: government
+  topic: colombia
+  trust_score: 0.8
+  source_priority: 0.75
+  max_items_per_fetch: 15
   max_item_age_days: 30
   default_language: es
   default_country_scope: co

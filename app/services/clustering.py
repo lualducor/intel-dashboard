@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 
 from sqlalchemy import func, select
@@ -10,6 +10,13 @@ from sqlalchemy import func, select
 from ..models import Article, StoryCluster
 
 _SIMILARITY_THRESHOLD = 0.84
+
+
+def _aware_utc(value: datetime) -> datetime:
+    """Normalize SQLite's timezone-naive datetime round trips before comparisons."""
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value.astimezone(timezone.utc)
 
 
 def assign_story_cluster(db, article: Article, *, now: datetime) -> StoryCluster | None:
@@ -43,11 +50,13 @@ def assign_story_cluster(db, article: Article, *, now: datetime) -> StoryCluster
     if match.cluster_id is not None:
         cluster = db.get(StoryCluster, match.cluster_id)
     else:
+        match_fetched_at = _aware_utc(match.fetched_at)
+        article_fetched_at = _aware_utc(article.fetched_at)
         cluster = StoryCluster(
             representative_title=match.title,
             topic=article.topic,
-            first_seen_at=min(match.fetched_at, article.fetched_at),
-            last_seen_at=max(match.fetched_at, article.fetched_at),
+            first_seen_at=min(match_fetched_at, article_fetched_at),
+            last_seen_at=max(match_fetched_at, article_fetched_at),
             source_count=1,
             top_article_id=match.id,
         )
@@ -58,7 +67,9 @@ def assign_story_cluster(db, article: Article, *, now: datetime) -> StoryCluster
     if cluster is None:
         return None
     article.cluster_id = cluster.id
-    cluster.last_seen_at = max(cluster.last_seen_at, article.fetched_at)
+    cluster.last_seen_at = max(
+        _aware_utc(cluster.last_seen_at), _aware_utc(article.fetched_at)
+    )
     current_top = db.get(Article, cluster.top_article_id) if cluster.top_article_id else None
     if current_top is None or article.final_score > current_top.final_score:
         cluster.top_article_id = article.id

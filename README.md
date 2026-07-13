@@ -16,6 +16,9 @@ UI (IBM Plex Sans/Mono).
 - **RSS/Atom and HTML-listing ingestion** from a curated, editable source set
   (`app/sources.yaml`): AI/Tech, Colombia/Bogotá, Crypto, and a daily Cancer
   horoscope.
+- **Publisher-aware HTML adapters** for Anthropic, Meta AI, Microsoft AI, MinTIC,
+  and Bogotá Tecnología, with structured-data and semantic-card fallbacks for other
+  sites.
 - **Explainable deterministic scorer** (`v1_base`) — every article gets a 0–1 score
   with a plain-text explanation. No black box:
 
