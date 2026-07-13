@@ -24,7 +24,7 @@
         class="refresh-all"
         hx-post="/ingest/run"
         hx-swap="none"
-        hx-on::after-request="window.location.reload()"
+        hx-on::after-request="if(event.detail.successful) window.location.reload()"
       >
         ↻ Refresh All
       </button>
@@ -34,5 +34,6 @@
   {% block content %}{% endblock %}
 
   {% include "_help_overlay.html" %}
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 </body>
 </html>

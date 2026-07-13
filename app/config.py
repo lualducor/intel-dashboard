@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     # Queue thresholds
     threshold_must_read: float = 0.70
     threshold_maybe_useful: float = 0.40
+    feed_page_size: int = 50
 
     # Feedback
     feedback_cold_floor: float = 0.3

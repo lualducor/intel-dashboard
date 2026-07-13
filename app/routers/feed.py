@@ -18,26 +18,38 @@ def feed(
     category: str | None = None,
     source: str | None = None,
     min_score: float | None = None,
+    page: int = 1,
     db: Session = Depends(get_db),
 ):
     settings = get_settings()
     active_queue = queue if queue in queues.QUEUES else "must_read"
-    articles = queues.feed(
+    current_page = max(1, page)
+    page_size = max(1, min(settings.feed_page_size, 200))
+    result = queues.feed(
         db,
         settings,
         queue=active_queue,
         category=category,
         source=source,
         min_score=min_score,
+        limit=page_size + 1,
+        offset=(current_page - 1) * page_size,
     )
+    articles = result[:page_size]
 
     return templates.TemplateResponse(
         request,
-        "_card_list.html",
+        "_card_page.html" if current_page > 1 else "_card_list.html",
         {
             "request": request,
             "articles": articles,
             "settings": settings,
             "active_queue": active_queue,
+            "page": current_page,
+            "page_size": page_size,
+            "has_more": len(result) > page_size,
+            "category": category,
+            "source": source,
+            "min_score": min_score,
         },
     )

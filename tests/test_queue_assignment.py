@@ -90,6 +90,12 @@ def test_queue_assignment_logic(db_factory):
     assert len(for_content) == 1
     assert for_content[0].title == "For Content AI"
 
+    # Pagination is deterministic and bounded.
+    first_page = queues.feed(db, settings, queue="noise", limit=1)
+    second_page = queues.feed(db, settings, queue="noise", limit=1, offset=1)
+    assert len(first_page) == len(second_page) == 1
+    assert first_page[0].id != second_page[0].id
+
     # Verify queue_counts
     counts = queues.queue_counts(db, settings)
     assert counts["must_read"] == 1

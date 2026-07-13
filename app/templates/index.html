@@ -9,6 +9,15 @@
   <div class="dashboard-grid">
     <section class="triage-inbox" aria-labelledby="triage-title">
       <h2 id="triage-title">Triage Inbox · AI</h2>
+      <form class="bulk-toolbar" hx-post="/bulk/articles/archive-old" hx-confirm="Archive untouched inbox items older than this age?">
+        <label for="archive-days">Inbox cleanup</label>
+        <select id="archive-days" name="days">
+          <option value="30">Older than 30 days</option>
+          <option value="60">Older than 60 days</option>
+          <option value="90">Older than 90 days</option>
+        </select>
+        <button type="submit" class="btn">Archive old</button>
+      </form>
       {% include "_queue_tabs.html" %}
       <div id="queue">
         {% include "_card_list.html" %}

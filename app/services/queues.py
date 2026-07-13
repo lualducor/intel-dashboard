@@ -78,6 +78,7 @@ def feed(
     source: str | None = None,
     min_score: float | None = None,
     limit: int | None = None,
+    offset: int = 0,
 ) -> list[Article]:
     """Articles for a queue, with optional filter chips (category / source slug / min_score)."""
     stmt = select(Article).where(queue_condition(queue, settings))
@@ -87,7 +88,15 @@ def feed(
         stmt = stmt.join(Source, Article.source_id == Source.id).where(Source.slug == source)
     if min_score is not None:
         stmt = stmt.where(Article.final_score >= min_score)
-    stmt = stmt.order_by(Article.final_score.desc(), Article.published_at.desc())
+    # The id tie-breaker keeps offset pagination stable when score and publication
+    # timestamps match (a common case for articles imported in the same batch).
+    stmt = stmt.order_by(
+        Article.final_score.desc(),
+        Article.published_at.desc(),
+        Article.id.desc(),
+    )
+    if offset:
+        stmt = stmt.offset(offset)
     if limit is not None:
         stmt = stmt.limit(limit)
     return list(db.scalars(stmt))

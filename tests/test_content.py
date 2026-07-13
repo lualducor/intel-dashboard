@@ -24,7 +24,8 @@ def client(db_factory):
             db.close()
     
     app.dependency_overrides[get_db] = override_get_db
-    yield TestClient(app)
+    with TestClient(app) as test_client:
+        yield test_client
     app.dependency_overrides.clear()
 
 def test_article_use_upsert_and_content_page(client, db_factory):

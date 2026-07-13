@@ -21,7 +21,9 @@ def index(
     settings = get_settings()
     active_queue = queue if queue in queues.QUEUES else "must_read"
     counts = queues.queue_counts(db, settings)
-    articles = queues.feed(db, settings, queue=active_queue)
+    page_size = max(1, min(settings.feed_page_size, 200))
+    page = queues.feed(db, settings, queue=active_queue, limit=page_size + 1)
+    articles = page[:page_size]
 
     return templates.TemplateResponse(
         request,
@@ -32,6 +34,9 @@ def index(
             "active_queue": active_queue,
             "counts": counts,
             "articles": articles,
+            "page": 1,
+            "page_size": page_size,
+            "has_more": len(page) > page_size,
             "colombia": queues.side_panel_colombia(db),
             "crypto": queues.side_panel_crypto(db),
             "horoscope": queues.horoscope_today(db),

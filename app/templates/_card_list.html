@@ -1,8 +1,6 @@
 <div class="card-list">
   {% if articles %}
-    {% for a in articles %}
-      {% include "_article_card.html" %}
-    {% endfor %}
+    {% include "_card_page.html" %}
   {% else %}
     {% if active_queue == "must_read" %}
     <p class="empty-state">No must-read stories right now.</p>

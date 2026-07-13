@@ -54,7 +54,7 @@ git clone https://github.com/lualducor/intel-dashboard.git
 cd intel-dashboard
 
 python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
+pip install -c requirements.lock -e ".[dev]"
 
 cp .env.example .env          # optional — sane defaults work without it
 alembic upgrade head          # create the SQLite schema
@@ -90,6 +90,7 @@ Settings load from environment variables (prefix `INTEL_`) or a `.env` file. See
 | `INTEL_DB_PATH` | `./data/intel.db` | SQLite database location |
 | `INTEL_THRESHOLD_MUST_READ` | `0.70` | min score for the Must-Read queue |
 | `INTEL_THRESHOLD_MAYBE_USEFUL` | `0.40` | min score for the Maybe-Useful queue |
+| `INTEL_FEED_PAGE_SIZE` | `50` | cards loaded per dashboard page (max 200) |
 | `INTEL_DISPLAY_TZ` | `America/Bogota` | timezone for displayed timestamps |
 | `INTEL_HTTP_TIMEOUT_SECONDS` | `15` | per-request fetch timeout |
 | `INTEL_PRUNE_DAYS` | `180` | retention window for pruning |
@@ -131,6 +132,10 @@ python -m pytest tests/ -v
 
 The suite covers the scorer, ingest pipeline, queue assignment, routes, search,
 feedback, and the source admin / health flows.
+
+The dashboard loads queues incrementally and includes an explicit inbox cleanup
+control for archiving untouched AI stories older than 30, 60, or 90 days. Saved,
+used, Colombia, crypto, and horoscope items are never affected by that bulk action.
 
 ---
 

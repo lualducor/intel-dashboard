@@ -2,22 +2,22 @@
 keywords:
   ai-systems:
     weight: 1.0
-    terms: [ai system, ai pipeline, ai infrastructure, ai workflow]
+    terms: [ai system, ai pipeline, ai infrastructure, ai workflow, sistema de ia, infraestructura de ia, flujo de trabajo de ia, inteligencia artificial]
   llm-orchestration:
     weight: 1.0
-    terms: [llm, large language model, orchestration, tool-use, function calling, mcp]
+    terms: [llm, large language model, orchestration, tool-use, function calling, mcp, modelo de lenguaje, modelos de lenguaje, orquestación, llamada de herramientas]
   agentic-ai:
     weight: 1.2
-    terms: [agent, agentic, autonomous, multi-agent, ai agent]
+    terms: [agent, agentic, autonomous, multi-agent, ai agent, agente de ia, agentes de ia, autónomo, multiagente]
   cybersecurity-ai:
     weight: 1.1
-    terms: [prompt injection, jailbreak, ai safety, red-team, phishing, exploit]
+    terms: [prompt injection, jailbreak, ai safety, red-team, phishing, exploit, inyección de prompts, seguridad de ia, ciberseguridad, vulnerabilidad]
   local-first:
     weight: 0.9
     terms: [local-first, ollama, llama.cpp, on-device, edge ai, sqlite]
   developer-tooling:
     weight: 0.8
-    terms: [sdk, cli, api, ide, devtool, copilot, dev experience]
+    terms: [sdk, cli, api, ide, devtool, copilot, dev experience, herramientas de desarrollo, desarrolladores, experiencia de desarrollo]
   open-source-model:
     weight: 0.9
     terms: [open weights, open-source model, gguf, hugging face]
@@ -29,13 +29,13 @@ keywords:
     terms: [gpu, inference, vllm, serving, kv cache, quantization]
   product-launch:
     weight: 0.6
-    terms: [launch, releases, announces, ships, available now]
+    terms: [launch, releases, announces, ships, available now, lanzamiento, lanza, anunció, anuncia, disponible]
   regulation:
     weight: 0.4
-    terms: [regulation, law, eu ai act, white house, executive order]
+    terms: [regulation, law, eu ai act, white house, executive order, regulación, ley, decreto, proyecto de ley]
   colombia-tech:
     weight: 0.9
-    terms: [colombia, bogotá, bogota, medellín, medellin, mintic]
+    terms: [colombia, bogotá, bogota, medellín, medellin, mintic, ministerio tic, tecnología colombia, innovación digital, transformación digital]
 
 # Category priority. Final value contributes via the 0.10 category weight in final_score.
 categories_priority:

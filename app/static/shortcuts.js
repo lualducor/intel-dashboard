@@ -143,5 +143,24 @@
     refreshCards();
   });
 
+  function showToast(message, kind = 'info') {
+    const toast = document.getElementById('toast');
+    if (!toast) return;
+    toast.textContent = message;
+    toast.dataset.kind = kind;
+    toast.classList.add('visible');
+    window.clearTimeout(showToast.timer);
+    showToast.timer = window.setTimeout(() => toast.classList.remove('visible'), 4000);
+  }
+
+  document.addEventListener('htmx:responseError', function(e) {
+    const status = e.detail.xhr ? e.detail.xhr.status : 'unknown';
+    showToast(`Request failed (${status}). Your previous state was kept.`, 'error');
+  });
+
+  document.addEventListener('htmx:sendError', function() {
+    showToast('Could not reach INTEL. Check that the dashboard is running.', 'error');
+  });
+
   window.addEventListener('DOMContentLoaded', refreshCards);
 })();

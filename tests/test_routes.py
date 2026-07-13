@@ -3,6 +3,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.db import get_db
 from app.models import Article, Source
+from app.config import get_settings
 
 @pytest.fixture
 def client(db_factory):
@@ -18,7 +19,8 @@ def client(db_factory):
             pass
 
     app.dependency_overrides[get_db] = override_get_db
-    yield TestClient(app), session
+    with TestClient(app) as test_client:
+        yield test_client, session
     app.dependency_overrides.clear()
     session.close()
 
@@ -27,6 +29,16 @@ def test_healthz(client):
     response = api_client.get("/healthz")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_cross_origin_write_is_rejected(client):
+    api_client, _ = client
+    response = api_client.post(
+        "/ingest/run",
+        headers={"Origin": "https://malicious.example"},
+    )
+    assert response.status_code == 403
+    assert response.json()["detail"] == "cross-origin writes are not allowed"
 
 def test_dashboard_empty(client):
     api_client, _ = client
@@ -84,8 +96,60 @@ def test_feed_with_data(client):
     response = api_client.get("/feed?queue=must_read")
     assert response.status_code == 200
     assert "Breaking AI News" in response.text
-    
+
     # Test dashboard also shows it
     response = api_client.get("/")
     assert response.status_code == 200
     assert "Breaking AI News" in response.text
+
+
+def test_feed_paginates(client):
+    api_client, session = client
+    settings = get_settings()
+    original_page_size = settings.feed_page_size
+    settings.feed_page_size = 1
+    try:
+        source = Source(
+            slug="paged-tech",
+            name="Paged Tech",
+            url="https://paged.example",
+            kind="rss",
+            source_type="news",
+            topic="ai",
+            active=True,
+        )
+        session.add(source)
+        session.flush()
+        for index in range(2):
+            session.add(
+                Article(
+                    source_id=source.id,
+                    title=f"Paged AI {index}",
+                    raw_title=f"Paged AI {index}",
+                    normalized_title=f"paged ai {index}",
+                    original_url=f"https://paged.example/{index}",
+                    canonical_url=f"https://paged.example/{index}",
+                    dedup_hash=f"paged-{index}",
+                    content_hash=f"paged-content-{index}",
+                    language="en",
+                    country_scope="global",
+                    topic="ai",
+                    urgency="normal",
+                    reading_time_minutes=1,
+                    scraping_method="rss",
+                    final_score=0.9 - index * 0.01,
+                    status="new",
+                )
+            )
+        session.commit()
+
+        first = api_client.get("/feed?queue=must_read")
+        second = api_client.get("/feed?queue=must_read&page=2")
+
+        assert first.status_code == second.status_code == 200
+        assert "Paged AI 0" in first.text
+        assert "Paged AI 1" not in first.text
+        assert "page=2" in first.text
+        assert "Paged AI 1" in second.text
+    finally:
+        settings.feed_page_size = original_page_size

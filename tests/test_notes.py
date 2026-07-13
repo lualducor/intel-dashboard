@@ -29,7 +29,8 @@ def client(db_factory):
             pass
 
     app.dependency_overrides[get_db] = override_get_db
-    yield TestClient(app), session
+    with TestClient(app) as test_client:
+        yield test_client, session
     app.dependency_overrides.clear()
     session.close()
 

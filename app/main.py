@@ -3,8 +3,10 @@ import sys
 from contextlib import asynccontextmanager
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from urllib.parse import urlsplit
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .config import get_settings
@@ -55,6 +57,26 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="INTEL", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def reject_cross_origin_writes(request: Request, call_next):
+    """Block browser-based cross-origin writes to the local dashboard.
+
+    Command-line and cron requests normally omit Origin and remain supported.
+    Browser POSTs include it, which prevents unrelated websites from mutating
+    localhost state through forms or JavaScript.
+    """
+    if request.method not in {"GET", "HEAD", "OPTIONS"}:
+        origin = request.headers.get("origin")
+        if origin:
+            hostname = urlsplit(origin).hostname
+            if hostname not in {"127.0.0.1", "::1", "localhost", "testserver"}:
+                return JSONResponse(
+                    {"detail": "cross-origin writes are not allowed"},
+                    status_code=403,
+                )
+    return await call_next(request)
 
 app.mount(
     "/static",

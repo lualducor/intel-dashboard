@@ -4,6 +4,8 @@ from sqlalchemy import select
 
 from app.db import get_db
 from app.main import app
+from datetime import datetime, timedelta, timezone
+
 from app.models import Article, ArticleUse, Source, UserAction
 from app.routers import actions, notes
 
@@ -29,7 +31,8 @@ def client(db_factory):
             pass
 
     app.dependency_overrides[get_db] = override_get_db
-    yield TestClient(app), session
+    with TestClient(app) as test_client:
+        yield test_client, session
     app.dependency_overrides.clear()
     session.close()
 
@@ -113,6 +116,59 @@ def test_used_for_content_creates_article_use(client):
     assert article_use is not None
     assert article_use.status == "idea"
     assert article_use.use_type == "linkedin"
+
+
+def test_for_content_quick_action_creates_default_use(client):
+    api_client, session = client
+    article = insert_article(session)
+
+    response = api_client.post(f"/articles/{article.id}/for_content")
+
+    assert response.status_code == 200
+    session.refresh(article)
+    assert article.status == "used"
+    article_use = session.scalar(
+        select(ArticleUse).where(ArticleUse.article_id == article.id)
+    )
+    assert article_use is not None
+    assert article_use.use_type == "personal_reading"
+
+
+def test_bulk_archive_only_old_ai_inbox_items(client):
+    api_client, session = client
+    old_ai = insert_article(session)
+    old_ai.fetched_at = datetime.now(timezone.utc) - timedelta(days=31)
+
+    source = old_ai.source
+    colombia = Article(
+        source_id=source.id,
+        title="Old Colombia",
+        raw_title="Old Colombia",
+        normalized_title="old colombia",
+        original_url="https://example.com/old-colombia",
+        canonical_url="https://example.com/old-colombia",
+        dedup_hash="old-colombia-hash",
+        content_hash="old-colombia-content",
+        language="es",
+        country_scope="co",
+        topic="colombia",
+        urgency="normal",
+        reading_time_minutes=2,
+        scraping_method="rss",
+        status="new",
+        fetched_at=datetime.now(timezone.utc) - timedelta(days=31),
+    )
+    session.add(colombia)
+    session.commit()
+
+    response = api_client.post("/bulk/articles/archive-old", data={"days": 30})
+
+    assert response.status_code == 200
+    assert response.json()["archived"] == 1
+    session.refresh(old_ai)
+    session.refresh(colombia)
+    assert old_ai.status == "archived"
+    assert colombia.status == "new"
 
 
 def test_unknown_action_and_missing_article_return_errors(client):
