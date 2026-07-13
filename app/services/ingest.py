@@ -2,7 +2,7 @@
 
 Pipeline per pass:
   acquire filelock (timeout 0.5s) -> read active sources -> compute feedback maps
-  -> for each due source: fetch RSS (outside any DB transaction) -> normalize,
+  -> for each due source: fetch through its adapter (outside any DB transaction) -> normalize,
   dedupe, tag, score -> insert article + tags + score_runs in a short transaction
   -> update source health -> write source_fetch_logs row.
 
@@ -21,10 +21,9 @@ from sqlalchemy import select
 from ..config import Settings, get_settings
 from ..db import SessionLocal
 from ..models import Article, ScoreRun, Source, SourceFetchLog, Tag
-from . import derive, normalizer, paywall, scorer, tagger
+from . import adapters, clustering, derive, extractor, normalizer, paywall, scorer, tagger
 from .feedback import compute_affinity_maps, user_feedback_score
 from .lock import Timeout, make_ingest_lock
-from .rss import fetch_rss
 
 log = logging.getLogger("intel.ingest")
 
@@ -103,7 +102,7 @@ async def _run_locked(
         # --- reads (one transaction, then commit to close before async fetches) ---
         stmt = select(Source).where(
             Source.active.is_(True),
-            Source.kind == "rss",
+            Source.kind.in_(["rss", "html"]),
             Source.feed_url.is_not(None),
         )
         if slug:
@@ -166,12 +165,10 @@ async def _ingest_source(
     items_skipped_limit = 0
     error: str | None = None
     try:
-        fetch_result = await fetch_rss(
-            source.feed_url,
+        fetch_result = await adapters.fetch_source(
+            source,
             user_agent=settings.user_agent,
             timeout=settings.http_timeout_seconds,
-            etag=source.feed_etag,
-            last_modified=source.feed_last_modified,
         )
         if fetch_result.not_modified:
             source.consecutive_failures = 0
@@ -227,6 +224,7 @@ async def _ingest_source(
             items_skipped_limit = max(0, len(items) - limit)
             items = items[:limit]
 
+        enrichments_remaining = max(0, settings.enrich_missing_summaries_per_source)
         for item in items:
             canonical = normalizer.canonicalize(item.link)
             dh = normalizer.dedup_hash(canonical)
@@ -234,14 +232,40 @@ async def _ingest_source(
                 continue
             seen_hashes.add(dh)
 
+            summary = item.summary
+            author = item.author
+            published_at = item.published_at
+            enriched_at = None
+            if not summary and enrichments_remaining > 0:
+                enrichments_remaining -= 1
+                try:
+                    extracted = await asyncio.to_thread(
+                        extractor.extract,
+                        item.link,
+                        user_agent=settings.user_agent,
+                        timeout=settings.http_timeout_seconds,
+                    )
+                except Exception as exc:
+                    log.info("summary enrichment failed for %s: %s", item.link, exc)
+                else:
+                    summary = extracted.summary or (
+                        extracted.text[:1000] if extracted.text else None
+                    )
+                    author = author or extracted.author
+                    published_at = published_at or extracted.published_at
+                    if summary:
+                        enriched_at = now
+
             ntitle = normalizer.normalized_title(item.title)
             tags_names, category = tagger.tag_article(
-                item.title, item.summary, interests, topic=source.topic
+                item.title, summary, interests, topic=source.topic
             )
-            matched_weights = [w for _, w in tagger.match_buckets(item.title, item.summary, interests)]
+            matched_weights = [
+                weight
+                for _, weight in tagger.match_buckets(item.title, summary, interests)
+            ]
             tag_objs = _get_or_create_tags(db, tags_names)
 
-            published_at = item.published_at
             hours_since = (
                 (now - published_at).total_seconds() / 3600.0
                 if published_at is not None
@@ -275,25 +299,25 @@ async def _ingest_source(
                 title=item.title,
                 raw_title=item.title,
                 normalized_title=ntitle,
-                author=item.author,
-                summary=item.summary,
+                author=author,
+                summary=summary,
                 original_url=item.link,
                 canonical_url=canonical,
                 dedup_hash=dh,
-                content_hash=normalizer.content_hash(item.title, item.summary),
+                content_hash=normalizer.content_hash(item.title, summary),
                 language=derive.language(source.default_language, item.language),
                 country_scope=derive.country_scope(
-                    source.default_country_scope, item.title, item.summary
+                    source.default_country_scope, item.title, summary
                 ),
                 topic=source.topic,
                 category=category,
                 urgency=derive.urgency(
                     item.title, source.source_type, published_at, now=now
                 ),
-                reading_time_minutes=derive.reading_time_minutes(item.summary),
+                reading_time_minutes=derive.reading_time_minutes(summary),
                 published_at=published_at,
                 fetched_at=now,
-                scraping_method="rss",
+                scraping_method=source.kind,
                 paywalled=paywall.is_paywalled(source.paywalled),
                 status="new",
                 source_score=ss,
@@ -306,6 +330,7 @@ async def _ingest_source(
                 score_explanation=explanation,
                 score_version=scorer.SCORE_VERSION,
                 last_scored_at=now,
+                enriched_at=enriched_at,
             )
             article.tags = tag_objs
             db.add(article)
@@ -324,6 +349,7 @@ async def _ingest_source(
                     explanation=explanation,
                 )
             )
+            clustering.assign_story_cluster(db, article, now=now)
             recent_titles.append(ntitle)
             items_new += 1
 
@@ -394,18 +420,23 @@ async def test_source(
         db.close()
     if source is None:
         return {"ok": False, "error": "unknown source", "items_seen": 0}
-    if not source.feed_url:
+    if source.kind == "rss" and not source.feed_url:
         return {"ok": False, "error": "no feed_url", "items_seen": 0}
     try:
-        items = await fetch_rss(
-            source.feed_url,
+        result = await adapters.fetch_source(
+            source,
             user_agent=settings.user_agent,
             timeout=settings.http_timeout_seconds,
         )
     except Exception as exc:
         return {"ok": False, "error": f"{type(exc).__name__}: {exc}"[:500], "items_seen": 0}
     last_published = None
-    dated = [i.published_at for i in items if i.published_at is not None]
+    dated = [i.published_at for i in result if i.published_at is not None]
     if dated:
         last_published = max(dated).isoformat()
-    return {"ok": True, "items_seen": len(items), "last_published": last_published, "error": None}
+    return {
+        "ok": True,
+        "items_seen": len(result),
+        "last_published": last_published,
+        "error": None,
+    }

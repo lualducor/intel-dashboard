@@ -21,6 +21,7 @@
     <span class="urgency-{{ a.urgency }}">{{ a.urgency }}</span>
     <span>{{ a.reading_time_minutes }} min</span>
     <span>{{ published.strftime("%Y-%m-%d %H:%M") if published else "No date" }}</span>
+    {% if a.cluster and a.cluster.source_count > 1 %}<span>{{ a.cluster.source_count }} sources</span>{% endif %}
   </p>
 
   {% if a.tags %}
@@ -36,7 +37,7 @@
   {% endif %}
 
   {% if a.summary %}
-  <p class="article-summary">{{ a.summary|truncate(320) }}</p>
+  <p class="article-summary">{{ a.summary|striptags|truncate(320) }}</p>
   {% endif %}
 
   <div class="article-actions">

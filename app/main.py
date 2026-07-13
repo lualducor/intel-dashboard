@@ -26,6 +26,7 @@ from .routers import (
     search,
     source_health,
     sources_admin,
+    topics,
 )
 from .templating import templates  # noqa: F401  (registers the to_bogota_local filter)
 
@@ -95,6 +96,7 @@ app.include_router(briefing.router)
 app.include_router(clip.router)
 app.include_router(source_health.router)
 app.include_router(sources_admin.router)
+app.include_router(topics.router)
 app.include_router(export.router)
 app.include_router(score_debug.router)
 app.include_router(notes.router)

@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..config import Settings
@@ -17,23 +17,49 @@ def generate_briefing(
     now = now or datetime.now(timezone.utc)
     cutoff = now - timedelta(hours=36)
 
-    items = list(
-        db.scalars(
-            select(Article)
-            .where(
+    score_order = (Article.final_score.desc(), Article.published_at.desc(), Article.id.desc())
+    ranked = (
+        select(
+            Article.id.label("article_id"),
+            func.row_number()
+            .over(partition_by=Article.source_id, order_by=score_order)
+            .label("source_rank"),
+        )
+        .where(
                 Article.topic == "ai",
                 Article.status.in_(("new", "saved", "important")),
                 Article.final_score >= settings.threshold_must_read,
                 Article.fetched_at >= cutoff,
-            )
-            .order_by(Article.final_score.desc())
+        )
+        .subquery()
+    )
+    items = list(
+        db.scalars(
+            select(Article)
+            .join(ranked, Article.id == ranked.c.article_id)
+            .order_by(ranked.c.source_rank.asc(), *score_order)
             .limit(5)
         )
     )
 
+    side_items: dict[str, list[Article]] = {}
+    for topic in ("colombia", "crypto"):
+        side_items[topic] = list(
+            db.scalars(
+                select(Article)
+                .where(
+                    Article.topic == topic,
+                    Article.status.not_in(["archived", "ignored"]),
+                    Article.fetched_at >= cutoff,
+                )
+                .order_by(Article.published_at.desc(), Article.final_score.desc())
+                .limit(2)
+            )
+        )
+
     heading = f"# Daily Briefing — {now:%Y-%m-%d %H:%M} UTC\n\n"
     if items:
-        body = heading + "\n".join(
+        body = heading + "## AI\n\n" + "\n".join(
             (
                 f"{i}. **{article.title}** (score {article.final_score:.2f})\n"
                 f"   {article.score_explanation or ''}\n"
@@ -44,9 +70,19 @@ def generate_briefing(
     else:
         body = heading + "\n_No must-read items in the last 36h._"
 
+    for topic, label in (("colombia", "Colombia / Bogotá"), ("crypto", "Crypto")):
+        topic_items = side_items[topic]
+        if topic_items:
+            body += f"\n\n## {label}\n\n" + "\n".join(
+                f"- **{article.title}**\n  {article.original_url}"
+                for article in topic_items
+            )
+
+    all_items = items + side_items["colombia"] + side_items["crypto"]
+
     briefing = Briefing(
         body_markdown=body,
-        article_ids_json=json.dumps([article.id for article in items]),
+        article_ids_json=json.dumps([article.id for article in all_items]),
         score_version=scorer.SCORE_VERSION,
     )
     db.add(briefing)

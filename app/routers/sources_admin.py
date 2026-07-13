@@ -1,3 +1,4 @@
+import re
 from urllib.parse import urlsplit
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request
@@ -9,12 +10,62 @@ from ..models import Source
 from ..templating import templates
 
 router = APIRouter()
+_SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+
+
+def _validated_url(value: str, *, label: str) -> str:
+    cleaned = value.strip()
+    parsed = urlsplit(cleaned)
+    if parsed.scheme not in {"http", "https"} or not parsed.hostname:
+        raise HTTPException(400, f"{label} must be an absolute HTTP(S) URL")
+    return cleaned
 
 
 @router.get("/sources")
 def sources_page(request: Request, db: Session = Depends(get_db)):
     srcs = db.scalars(select(Source).order_by(Source.topic, Source.name)).all()
     return templates.TemplateResponse(request, "sources.html", {"sources": srcs})
+
+
+@router.post("/sources/create")
+def create(
+    request: Request,
+    slug: str = Form(...),
+    name: str = Form(...),
+    url: str = Form(...),
+    feed_url: str = Form(...),
+    kind: str = Form("rss"),
+    source_type: str = Form("news"),
+    topic: str = Form("ai"),
+    default_language: str = Form("en"),
+    db: Session = Depends(get_db),
+):
+    cleaned_slug = slug.strip().lower()
+    if not _SLUG_RE.fullmatch(cleaned_slug):
+        raise HTTPException(400, "slug must contain lowercase letters, numbers, and hyphens")
+    if kind not in {"rss", "html"}:
+        raise HTTPException(400, "kind must be rss or html")
+    if topic not in {"ai", "colombia", "crypto"}:
+        raise HTTPException(400, "unsupported topic")
+    if db.scalar(select(Source).where(Source.slug == cleaned_slug)) is not None:
+        raise HTTPException(409, "source slug already exists")
+
+    source = Source(
+        slug=cleaned_slug,
+        name=name.strip(),
+        url=_validated_url(url, label="site URL"),
+        feed_url=_validated_url(feed_url, label="feed/listing URL"),
+        kind=kind,
+        source_type=source_type.strip() or "news",
+        topic=topic,
+        default_language=default_language.strip() or "en",
+        default_country_scope="co" if topic == "colombia" else "global",
+        active=True,
+    )
+    db.add(source)
+    db.commit()
+    db.refresh(source)
+    return templates.TemplateResponse(request, "_source_row.html", {"source": source})
 
 
 @router.post("/sources/{slug}/toggle")

@@ -171,6 +171,25 @@ def test_bulk_archive_only_old_ai_inbox_items(client):
     assert colombia.status == "new"
 
 
+def test_bulk_archive_uses_publication_date_and_can_target_source(client):
+    api_client, session = client
+    article = insert_article(session)
+    article.published_at = datetime.now(timezone.utc) - timedelta(days=8)
+    article.fetched_at = datetime.now(timezone.utc)
+    session.commit()
+
+    response = api_client.post(
+        "/bulk/articles/archive-old",
+        data={"days": 7, "source": "action-source"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["archived"] == 1
+    assert response.json()["source"] == "action-source"
+    session.refresh(article)
+    assert article.status == "archived"
+
+
 def test_unknown_action_and_missing_article_return_errors(client):
     api_client, session = client
     article = insert_article(session)

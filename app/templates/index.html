@@ -4,6 +4,13 @@
 
 {% block content %}
 <main class="dashboard-shell">
+  <div class="operations-strip">
+    <span>{{ source_stats.active }} active sources</span>
+    <span>{{ source_stats.failing }} reporting failures</span>
+    {% set refreshed = source_stats.last_refresh|to_bogota_local %}
+    <span>Last refresh: {{ refreshed.strftime('%Y-%m-%d %H:%M') if refreshed else 'Never' }}</span>
+    <a href="/sources/health">Source health</a>
+  </div>
   {% include "_briefing.html" %}
 
   <div class="dashboard-grid">
@@ -27,7 +34,7 @@
     <aside class="side-panel" aria-label="Side Panel">
       <section class="side-section colombia" aria-labelledby="colombia-title">
         <h2 id="colombia-title">
-          Colombia / Bogotá
+          <a href="/topics/colombia">Colombia / Bogotá</a>
           {% if colombia %}<span class="count">{{ colombia|length }}</span>{% endif %}
         </h2>
         {% if colombia %}
@@ -48,7 +55,7 @@
 
       <section class="side-section crypto" aria-labelledby="crypto-title">
         <h2 id="crypto-title">
-          Crypto
+          <a href="/topics/crypto">Crypto</a>
           {% if crypto %}<span class="count">{{ crypto|length }}</span>{% endif %}
         </h2>
         {% if crypto %}

@@ -4,6 +4,7 @@ from typing import Iterator
 
 import feedparser
 import httpx
+from bs4 import BeautifulSoup
 
 
 class EmptyFeedError(ValueError):
@@ -35,6 +36,15 @@ class RssFetchResult:
 
     def __getitem__(self, index):
         return self.items[index]
+
+
+def plain_text(value: str | None) -> str | None:
+    """Turn publisher-supplied HTML descriptions into compact readable text."""
+    if not value:
+        return None
+    text = BeautifulSoup(value, "html.parser").get_text(" ", strip=True)
+    compact = " ".join(text.split())
+    return compact or None
 
 
 async def fetch_rss(
@@ -73,7 +83,7 @@ async def fetch_rss(
         if not title or not link:
             continue
             
-        summary = entry.get("summary") or entry.get("description") or None
+        summary = plain_text(entry.get("summary") or entry.get("description"))
         author = entry.get("author") or None
         
         published_at = None

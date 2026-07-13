@@ -171,6 +171,9 @@ class Article(Base):
     )
 
     source: Mapped[Source] = relationship(back_populates="articles")
+    cluster: Mapped[StoryCluster | None] = relationship(
+        "StoryCluster", foreign_keys=[cluster_id]
+    )
     tags: Mapped[list[Tag]] = relationship(
         secondary=article_tags, back_populates="articles"
     )

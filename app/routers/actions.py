@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, Form, HTTPException, Request, Response
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..config import get_settings
@@ -71,23 +71,27 @@ def act(
 def archive_old(
     response: Response,
     days: int = Form(30),
+    source: str | None = Form(None),
     db: Session = Depends(get_db),
 ):
     """Archive untouched inbox items older than a user-selected age."""
     safe_days = max(1, min(days, 3650))
     cutoff = datetime.now(timezone.utc) - timedelta(days=safe_days)
-    articles = list(
-        db.scalars(
-            select(Article).where(
-                Article.topic == "ai",
-                Article.status == "new",
-                Article.fetched_at < cutoff,
-            )
-        )
+    stmt = select(Article).where(
+        Article.topic == "ai",
+        Article.status == "new",
+        func.coalesce(Article.published_at, Article.fetched_at) < cutoff,
     )
+    if source:
+        stmt = stmt.where(Article.source.has(slug=source))
+    articles = list(db.scalars(stmt))
     for article in articles:
         article.status = "archived"
         db.add(UserAction(article_id=article.id, action="bulk_archive_old"))
     db.commit()
     response.headers["HX-Refresh"] = "true"
-    return {"archived": len(articles), "older_than_days": safe_days}
+    return {
+        "archived": len(articles),
+        "older_than_days": safe_days,
+        "source": source,
+    }

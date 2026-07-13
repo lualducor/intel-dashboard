@@ -80,6 +80,24 @@ def test_sources_admin_routes(db_factory):
         response = client.get("/sources")
         assert response.status_code == 200
         assert source.name in response.text
+
+        response = client.post(
+            "/sources/create",
+            data={
+                "slug": "new-html-source",
+                "name": "New HTML Source",
+                "url": "https://new.example",
+                "feed_url": "https://new.example/news",
+                "kind": "html",
+                "source_type": "official_blog",
+                "topic": "ai",
+                "default_language": "en",
+            },
+        )
+        assert response.status_code == 200
+        created = db.scalar(select(Source).where(Source.slug == "new-html-source"))
+        assert created is not None
+        assert created.kind == "html"
     finally:
         app.dependency_overrides.clear()
         db.close()

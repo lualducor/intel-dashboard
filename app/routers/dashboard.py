@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, Request
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from ..config import get_settings
 from ..db import get_db
+from ..models import Source, SourceFetchLog
 from ..services import briefing
 from ..services import queues
 from ..templating import templates
@@ -24,6 +26,19 @@ def index(
     page_size = max(1, min(settings.feed_page_size, 200))
     page = queues.feed(db, settings, queue=active_queue, limit=page_size + 1)
     articles = page[:page_size]
+    source_stats = {
+        "active": db.scalar(
+            select(func.count()).select_from(Source).where(Source.active.is_(True))
+        )
+        or 0,
+        "failing": db.scalar(
+            select(func.count())
+            .select_from(Source)
+            .where(Source.active.is_(True), Source.consecutive_failures > 0)
+        )
+        or 0,
+        "last_refresh": db.scalar(select(func.max(SourceFetchLog.finished_at))),
+    }
 
     return templates.TemplateResponse(
         request,
@@ -41,5 +56,6 @@ def index(
             "crypto": queues.side_panel_crypto(db),
             "horoscope": queues.horoscope_today(db),
             "briefing": briefing.get_latest_briefing(db),
+            "source_stats": source_stats,
         },
     )

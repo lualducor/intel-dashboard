@@ -5,6 +5,7 @@ from sqlalchemy import func, select
 
 from app.models import Article, ScoreRun, Source
 from app.services import ingest
+from app.services import extractor
 
 FEED_URL = "https://test.local/feed.xml"
 SAMPLE = """<?xml version="1.0" encoding="UTF-8"?>
@@ -167,3 +168,57 @@ async def test_ingest_not_modified_is_a_successful_noop(db_factory):
     assert result["sources"][0]["ok"] is True
     assert result["sources"][0]["not_modified"] is True
     assert result["totals"]["items_new"] == 0
+
+
+async def test_ingest_enriches_a_limited_number_of_missing_summaries(
+    db_factory, monkeypatch
+):
+    _seed_source(db_factory)
+    feed = """<?xml version="1.0"?><rss version="2.0"><channel><title>Missing</title>
+    <item><title>Agent system without summary</title><link>https://test.local/missing</link><pubDate>Sun, 12 Jul 2026 12:00:00 GMT</pubDate></item>
+    </channel></rss>"""
+
+    def fake_extract(url, **kwargs):
+        return extractor.Extracted(
+            title="",
+            summary="An autonomous agent orchestration system.",
+            text=None,
+            author="Reporter",
+            published_at=None,
+            language="en",
+        )
+
+    monkeypatch.setattr(extractor, "extract", fake_extract)
+    with respx.mock:
+        respx.get(FEED_URL).mock(return_value=httpx.Response(200, text=feed))
+        result = await ingest.run_ingest(session_factory=db_factory, force=True)
+
+    assert result["totals"]["items_new"] == 1
+    db = db_factory()
+    article = db.scalar(select(Article))
+    assert article.summary == "An autonomous agent orchestration system."
+    assert article.author == "Reporter"
+    assert article.enriched_at is not None
+    db.close()
+
+
+async def test_enrichment_failure_does_not_fail_source(db_factory, monkeypatch):
+    _seed_source(db_factory)
+    feed = """<?xml version="1.0"?><rss version="2.0"><channel><title>Missing</title>
+    <item><title>Story without summary</title><link>https://test.local/unavailable</link><pubDate>Sun, 12 Jul 2026 12:00:00 GMT</pubDate></item>
+    </channel></rss>"""
+
+    def failed_extract(url, **kwargs):
+        raise httpx.TimeoutException("article page timed out")
+
+    monkeypatch.setattr(extractor, "extract", failed_extract)
+    with respx.mock:
+        respx.get(FEED_URL).mock(return_value=httpx.Response(200, text=feed))
+        result = await ingest.run_ingest(session_factory=db_factory, force=True)
+
+    assert result["sources"][0]["ok"] is True
+    assert result["totals"]["items_new"] == 1
+    db = db_factory()
+    article = db.scalar(select(Article))
+    assert article.summary is None
+    db.close()

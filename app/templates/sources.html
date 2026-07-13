@@ -5,6 +5,24 @@
 {% block content %}
   <main class="page">
     <h1>Sources</h1>
+    <details class="source-add-panel">
+      <summary>Add source</summary>
+      <form class="source-add-form" hx-post="/sources/create" hx-target="#sources-body" hx-swap="beforeend">
+        <label>Slug <input name="slug" pattern="[a-z0-9]+(?:-[a-z0-9]+)*" required></label>
+        <label>Name <input name="name" required></label>
+        <label>Site URL <input type="url" name="url" required></label>
+        <label>Feed or listing URL <input type="url" name="feed_url" required></label>
+        <label>Adapter
+          <select name="kind"><option value="rss">RSS / Atom</option><option value="html">HTML listing</option></select>
+        </label>
+        <label>Topic
+          <select name="topic"><option value="ai">AI</option><option value="colombia">Colombia</option><option value="crypto">Crypto</option></select>
+        </label>
+        <label>Source type <input name="source_type" value="news" required></label>
+        <label>Language <input name="default_language" value="en" required></label>
+        <button type="submit">Add and enable</button>
+      </form>
+    </details>
     <table>
       <thead>
         <tr>

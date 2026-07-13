@@ -53,6 +53,7 @@ class Settings(BaseSettings):
 
     # Ingest guardrail (L1: arXiv flooding). 0 = unlimited.
     max_items_per_pass: int = 0
+    enrich_missing_summaries_per_source: int = 3
 
     def ensure_directories(self) -> None:
         """Create all data/* directories on first run (PLAN.md §3)."""

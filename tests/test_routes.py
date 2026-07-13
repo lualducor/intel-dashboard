@@ -153,3 +153,46 @@ def test_feed_paginates(client):
         assert "Paged AI 1" in second.text
     finally:
         settings.feed_page_size = original_page_size
+
+
+def test_colombia_topic_page(client):
+    api_client, session = client
+    source = Source(
+        slug="colombia-topic",
+        name="Colombia Topic",
+        url="https://colombia.example",
+        kind="rss",
+        source_type="local_news",
+        topic="colombia",
+        default_language="es",
+        default_country_scope="co",
+    )
+    session.add(source)
+    session.flush()
+    session.add(
+        Article(
+            source_id=source.id,
+            title="Bogotá expands its digital strategy",
+            raw_title="Bogotá expands its digital strategy",
+            normalized_title="bogota expands its digital strategy",
+            original_url="https://colombia.example/story",
+            canonical_url="https://colombia.example/story",
+            dedup_hash="colombia-topic-story",
+            content_hash="colombia-topic-content",
+            language="es",
+            country_scope="co",
+            topic="colombia",
+            urgency="normal",
+            reading_time_minutes=2,
+            scraping_method="rss",
+            status="new",
+        )
+    )
+    session.commit()
+
+    response = api_client.get("/topics/colombia?days=30")
+    assert response.status_code == 200
+    assert "Bogotá expands its digital strategy" in response.text
+    assert "Colombia Topic" in response.text
+
+    assert api_client.get("/topics/unknown").status_code == 404

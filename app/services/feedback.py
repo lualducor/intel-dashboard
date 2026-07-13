@@ -93,8 +93,8 @@ def user_feedback_score(
     cold_floor: float,
     ramp_at: int,
 ) -> float:
-    """Cold-start floor until `ramp_at` actions, then a real affinity-based score."""
-    if maps.total_actions < ramp_at:
+    """Blend from the cold-start floor toward learned affinity as actions accrue."""
+    if maps.total_actions == 0:
         return cold_floor
 
     source_aff = maps.source_aff.get(source_id, 0.5)
@@ -105,4 +105,6 @@ def user_feedback_score(
     category_aff = maps.category_aff.get(category, 0.5) if category else 0.5
 
     affinity = 0.25 * source_aff + 0.25 * tag_aff + 0.25 * category_aff + 0.25 * 0.5
-    return max(0.0, min(1.0, 0.3 + (affinity - 0.5)))
+    learned = max(0.0, min(1.0, 0.3 + (affinity - 0.5)))
+    progress = min(1.0, maps.total_actions / max(1, ramp_at))
+    return cold_floor + progress * (learned - cold_floor)

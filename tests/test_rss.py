@@ -12,7 +12,7 @@ SAMPLE_RSS = """<?xml version="1.0" encoding="UTF-8" ?>
   <item>
     <title>Item 1</title>
     <link>http://example.com/item1</link>
-    <description>Summary 1</description>
+    <description><![CDATA[<p>Summary <strong>1</strong></p><p>Second line.</p>]]></description>
     <pubDate>Mon, 25 May 2026 10:00:00 +0000</pubDate>
     <author>Author 1</author>
   </item>
@@ -39,7 +39,7 @@ async def test_fetch_rss_parsing():
         assert len(items) == 2
         assert items[0].title == "Item 1"
         assert items[0].link == "http://example.com/item1"
-        assert items[0].summary == "Summary 1"
+        assert items[0].summary == "Summary 1 Second line."
         assert items[0].author == "Author 1"
         assert items[0].published_at is not None
         assert items[0].published_at.tzinfo is not None

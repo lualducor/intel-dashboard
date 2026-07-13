@@ -72,6 +72,26 @@ def test_positive_affinity_ramps(db_factory):
     db.close()
 
 
+def test_feedback_begins_learning_before_full_ramp(db_factory):
+    db = db_factory()
+    src, art = _make_article(db)
+    db.add(UserAction(article_id=art.id, action="useful"))
+    db.commit()
+    maps = compute_affinity_maps(db)
+
+    score = user_feedback_score(
+        source_id=src.id,
+        tag_ids=[],
+        category="agentic_ai",
+        maps=maps,
+        cold_floor=0.3,
+        ramp_at=50,
+    )
+
+    assert score > 0.3
+    db.close()
+
+
 def test_negative_actions_lower_affinity(db_factory):
     db = db_factory()
     src, art = _make_article(db, category="regulation")

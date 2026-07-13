@@ -110,6 +110,58 @@
   max_item_age_days: 7
   default_language: en
 
+- slug: mistral-news
+  name: Mistral AI News
+  url: https://mistral.ai/news/
+  feed_url: https://mistral.ai/news/
+  kind: html
+  source_type: official_blog
+  topic: ai
+  trust_score: 0.9
+  source_priority: 0.85
+  max_items_per_fetch: 20
+  max_item_age_days: 60
+  default_language: en
+
+- slug: github-ai
+  name: GitHub AI & ML
+  url: https://github.blog/ai-and-ml/
+  feed_url: https://github.blog/ai-and-ml/feed/
+  kind: rss
+  source_type: official_blog
+  topic: ai
+  trust_score: 0.85
+  source_priority: 0.85
+  max_items_per_fetch: 20
+  max_item_age_days: 30
+  default_language: en
+
+- slug: nvidia-deep-learning
+  name: NVIDIA Deep Learning
+  url: https://blogs.nvidia.com/blog/category/deep-learning/
+  feed_url: https://blogs.nvidia.com/blog/category/deep-learning/feed/
+  kind: rss
+  source_type: official_blog
+  topic: ai
+  trust_score: 0.85
+  source_priority: 0.75
+  max_items_per_fetch: 20
+  max_item_age_days: 30
+  default_language: en
+
+- slug: aws-machine-learning
+  name: AWS Machine Learning Blog
+  url: https://aws.amazon.com/blogs/machine-learning/
+  feed_url: https://aws.amazon.com/blogs/machine-learning/feed/
+  kind: rss
+  source_type: official_blog
+  topic: ai
+  trust_score: 0.8
+  source_priority: 0.7
+  max_items_per_fetch: 20
+  max_item_age_days: 30
+  default_language: en
+
 # === Colombia / Bogotá ===
 - slug: eltiempo-bogota
   name: El Tiempo — Bogotá
@@ -129,15 +181,29 @@
 - slug: semana-tecnologia
   name: Semana — Tecnología
   url: https://www.semana.com/tecnologia/
-  feed_url: https://www.semana.com/rss/tecnologia.xml  # [verify] 2026-05-28: 404
-  active: false  # 2026-05-28 verify_feeds: 404; needs a working feed URL
-  kind: rss
+  feed_url: https://www.semana.com/tecnologia/
+  active: true
+  kind: html
   source_type: tech_media
   topic: colombia
   trust_score: 0.6
   source_priority: 0.55
   max_items_per_fetch: 20
   max_item_age_days: 30
+  default_language: es
+  default_country_scope: co
+
+- slug: enter-co
+  name: ENTER.CO
+  url: https://www.enter.co/
+  feed_url: https://www.enter.co/
+  kind: html
+  source_type: tech_media
+  topic: colombia
+  trust_score: 0.75
+  source_priority: 0.75
+  max_items_per_fetch: 20
+  max_item_age_days: 14
   default_language: es
   default_country_scope: co
 
@@ -198,6 +264,34 @@
   fetch_interval_minutes: 120
   max_items_per_fetch: 30
   max_item_age_days: 14
+
+- slug: chainalysis
+  name: Chainalysis Research
+  url: https://www.chainalysis.com/blog/
+  feed_url: https://www.chainalysis.com/blog/feed/
+  kind: rss
+  source_type: research
+  topic: crypto
+  trust_score: 0.85
+  source_priority: 0.75
+  default_language: en
+  fetch_interval_minutes: 240
+  max_items_per_fetch: 15
+  max_item_age_days: 30
+
+- slug: ethereum-blog
+  name: Ethereum Foundation Blog
+  url: https://blog.ethereum.org/
+  feed_url: https://blog.ethereum.org/feed.xml
+  kind: rss
+  source_type: official_blog
+  topic: crypto
+  trust_score: 0.9
+  source_priority: 0.8
+  default_language: en
+  fetch_interval_minutes: 240
+  max_items_per_fetch: 20
+  max_item_age_days: 30
 
 # === Horoscope (Cancer) ===
 - slug: horoscope-cancer

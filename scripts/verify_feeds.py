@@ -9,23 +9,31 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
+from types import SimpleNamespace
 
 import yaml
 
 from app.config import get_settings
-from app.services.rss import fetch_rss
+from app.services.adapters import fetch_source
 
 SOURCES_PATH = Path(__file__).resolve().parents[1] / "app" / "sources.yaml"
 
 
 async def _check(entry: dict, settings) -> tuple[str, bool, int, str | None]:
     slug = entry.get("slug", "?")
-    feed_url = entry.get("feed_url")
+    feed_url = entry.get("feed_url") or entry.get("url")
     if not feed_url:
-        return (slug, False, 0, "no feed_url")
+        return (slug, False, 0, "no fetch URL")
+    source = SimpleNamespace(
+        kind=entry.get("kind", "rss"),
+        url=entry.get("url", ""),
+        feed_url=entry.get("feed_url"),
+        feed_etag=None,
+        feed_last_modified=None,
+    )
     try:
-        result = await fetch_rss(
-            feed_url,
+        result = await fetch_source(
+            source,
             user_agent=settings.user_agent,
             timeout=settings.http_timeout_seconds,
         )
